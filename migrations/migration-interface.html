@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Migration Admin - Étape par étape</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .step { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .pending { background: #f8f9fa; border-color: #dee2e6; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .credentials { background: #fff3cd; padding: 15px; border: 1px solid #ffeaa7; border-radius: 5px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Migration du Système d'Administration NZELA</h1>
+    <p>Cette interface vous permet d'exécuter la migration étape par étape pour éviter les erreurs.</p>
+    
+    <div id="step1" class="step pending">
+        <h3>Étape 1: Ajouter colonne 'role' à la table users</h3>
+        <button onclick="runStep(1)">Exécuter étape 1</button>
+        <div id="result1"></div>
+    </div>
+    
+    <div id="step2" class="step pending">
+        <h3>Étape 2: Ajouter colonne 'last_activity' à la table users</h3>
+        <button onclick="runStep(2)" disabled>Exécuter étape 2</button>
+        <div id="result2"></div>
+    </div>
+    
+    <div id="step3" class="step pending">
+        <h3>Étape 3: Créer le super administrateur</h3>
+        <button onclick="runStep(3)" disabled>Exécuter étape 3</button>
+        <div id="result3"></div>
+    </div>
+    
+    <div id="step4" class="step pending">
+        <h3>Étape 4: Ajouter colonne 'assigned_to' aux signalements</h3>
+        <button onclick="runStep(4)" disabled>Exécuter étape 4</button>
+        <div id="result4"></div>
+    </div>
+    
+    <div id="step5" class="step pending">
+        <h3>Étape 5: Ajouter colonne 'admin_notes' aux signalements</h3>
+        <button onclick="runStep(5)" disabled>Exécuter étape 5</button>
+        <div id="result5"></div>
+    </div>
+    
+    <div id="credentials" class="credentials" style="display: none;">
+        <h3>🎉 Migration terminée!</h3>
+        <p><strong>Identifiants administrateur créés:</strong></p>
+        <p><strong>Email:</strong> admin@nzela.local</p>
+        <p><strong>Mot de passe:</strong> admin123</p>
+        <p><em>⚠️ Changez ce mot de passe en production!</em></p>
+    </div>
+
+    <script>
+        async function runStep(stepNumber) {
+            const button = document.querySelector(`#step${stepNumber} button`);
+            const result = document.getElementById(`result${stepNumber}`);
+            const stepDiv = document.getElementById(`step${stepNumber}`);
+            
+            button.disabled = true;
+            button.textContent = 'Exécution...';
+            result.innerHTML = '';
+            
+            try {
+                const response = await fetch(`step-by-step-migration.php?step=${stepNumber}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    stepDiv.className = 'step success';
+                    result.innerHTML = `<p>✅ ${data.message}</p>`;
+                    
+                    // Activer l'étape suivante
+                    if (data.next_step && data.next_step !== 'done') {
+                        const nextButton = document.querySelector(`#step${data.next_step} button`);
+                        if (nextButton) nextButton.disabled = false;
+                    }
+                    
+                    // Si c'est la dernière étape
+                    if (data.next_step === 'done') {
+                        // Exécuter automatiquement l'étape finale
+                        setTimeout(() => runStep('done'), 1000);
+                    }
+                    
+                    // Afficher les identifiants si disponibles
+                    if (data.admin_credentials) {
+                        document.getElementById('credentials').style.display = 'block';
+                    }
+                } else {
+                    stepDiv.className = 'step error';
+                    result.innerHTML = `<p>❌ Erreur: ${data.error || data.details}</p>`;
+                    button.disabled = false;
+                    button.textContent = 'Réessayer';
+                }
+            } catch (error) {
+                stepDiv.className = 'step error';
+                result.innerHTML = `<p>❌ Erreur de connexion: ${error.message}</p>`;
+                button.disabled = false;
+                button.textContent = 'Réessayer';
+            }
+        }
+        
+        // Fonction spéciale pour l'étape finale
+        async function runStep(step) {
+            if (step === 'done') {
+                try {
+                    const response = await fetch('step-by-step-migration.php?step=done');
+                    const data = await response.json();
+                    if (data.success) {
+                        document.getElementById('credentials').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Erreur étape finale:', error);
+                }
+                return;
+            }
+            
+            // Code existant pour les autres étapes...
+            const button = document.querySelector(`#step${step} button`);
+            const result = document.getElementById(`result${step}`);
+            const stepDiv = document.getElementById(`step${step}`);
+            
+            button.disabled = true;
+            button.textContent = 'Exécution...';
+            result.innerHTML = '';
+            
+            try {
+                const response = await fetch(`step-by-step-migration.php?step=${step}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    stepDiv.className = 'step success';
+                    result.innerHTML = `<p>✅ ${data.message}</p>`;
+                    
+                    // Activer l'étape suivante
+                    if (data.next_step && data.next_step !== 'done') {
+                        const nextButton = document.querySelector(`#step${data.next_step} button`);
+                        if (nextButton) nextButton.disabled = false;
+                    }
+                    
+                    // Si c'est la dernière étape
+                    if (data.next_step === 'done') {
+                        setTimeout(() => runStep('done'), 1000);
+                    }
+                } else {
+                    stepDiv.className = 'step error';
+                    result.innerHTML = `<p>❌ Erreur: ${data.error || data.details}</p>`;
+                    button.disabled = false;
+                    button.textContent = 'Réessayer';
+                }
+            } catch (error) {
+                stepDiv.className = 'step error';
+                result.innerHTML = `<p>❌ Erreur de connexion: ${error.message}</p>`;
+                button.disabled = false;
+                button.textContent = 'Réessayer';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test d'affichage des images - NZELA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .types-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .type-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .type-card:hover {
+            transform: translateY(-5px);
+        }
+        .type-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+        }
+        .type-image.error {
+            border-color: #ff6b6b;
+            background-color: #ffe0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        .type-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .type-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .status.loading {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        .status.success {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        .status.error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .image-info {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖼️ Test d'affichage des images NZELA</h1>
+        <p>Vérification du système d'images pour les types de signalements</p>
+    </div>
+
+    <div id="status" class="status loading">
+        📡 Chargement des types depuis l'API...
+    </div>
+
+    <div id="types-container" class="types-grid">
+        <!-- Les types seront chargés ici -->
+    </div>
+
+    <script>
+        async function loadTypes() {
+            const statusEl = document.getElementById('status');
+            const containerEl = document.getElementById('types-container');
+            
+            try {
+                const response = await fetch('http://localhost/api/types/list.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    statusEl.className = 'status success';
+                    statusEl.innerHTML = `✅ ${data.count} types chargés avec succès !`;
+                    
+                    containerEl.innerHTML = '';
+                    
+                    data.data.forEach(type => {
+                        const card = document.createElement('div');
+                        card.className = 'type-card';
+                        
+                        card.innerHTML = `
+                            <img 
+                                src="${type.image_url}" 
+                                alt="${type.nom}"
+                                class="type-image"
+                                onerror="this.classList.add('error'); this.style.backgroundImage='none'; this.innerHTML='❌ Image non trouvée';"
+                                onload="console.log('✅ Image chargée:', '${type.nom}');"
+                            >
+                            <div class="type-title">${type.nom}</div>
+                            <div class="type-description">${type.description}</div>
+                            <div class="image-info">
+                                <strong>Chemin:</strong> ${type.image_path}<br>
+                                <strong>URL:</strong> <a href="${type.image_url}" target="_blank">Tester l'image</a>
+                            </div>
+                        `;
+                        
+                        containerEl.appendChild(card);
+                    });
+                } else {
+                    throw new Error(data.error || 'Erreur inconnue');
+                }
+                
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = `❌ Erreur : ${error.message}`;
+                console.error('Erreur lors du chargement:', error);
+            }
+        }
+        
+        // Charger les types au démarrage
+        loadTypes();
+        
+        // Ajouter des logs pour le débogage
+        window.addEventListener('error', (e) => {
+            if (e.target.tagName === 'IMG') {
+                console.error('❌ Erreur de chargement d\'image:', e.target.src);
+            }
+        });
+    </script>
+</body>
+</html>

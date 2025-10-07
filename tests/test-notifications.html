@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Système de Notifications - NZELA</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .section { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .button:hover { background: #005a87; }
+        .button.danger { background: #d32f2f; }
+        .button.danger:hover { background: #b71c1c; }
+        .error { background: #ffebee; border-left: 4px solid #f44336; padding: 10px; margin: 10px 0; }
+        .success { background: #e8f5e8; border-left: 4px solid #4caf50; padding: 10px; margin: 10px 0; }
+        .info { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 10px; margin: 10px 0; }
+        .notification { border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .notification.unread { border-left: 4px solid #ff9800; background: #fff8e1; }
+        .notification.read { border-left: 4px solid #4caf50; background: #f9f9f9; }
+        .notification .header { font-weight: bold; margin-bottom: 5px; }
+        .notification .meta { font-size: 0.9em; color: #666; margin-top: 5px; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 300px; }
+        input, select { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+        .tabs { border-bottom: 1px solid #ddd; margin-bottom: 20px; }
+        .tab { display: inline-block; padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { border-bottom-color: #007cba; background: #f0f0f0; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .badge { background: #ff5722; color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <h1>🔔 Test Système de Notifications - NZELA</h1>
+    
+    <div class="info">
+        <strong>Authentification :</strong><br>
+        <button class="button" onclick="loginAsAdmin()">Se connecter comme Admin</button>
+        <button class="button" onclick="loginAsCitoyen()">Se connecter comme Citoyen (TODO)</button>
+        <button class="button" onclick="logout()">Se déconnecter</button>
+        <span id="auth-status"></span>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('list')">📋 Liste Notifications</div>
+        <div class="tab" onclick="showTab('count')">🔢 Compteur</div>
+        <div class="tab" onclick="showTab('actions')">⚡ Actions</div>
+        <div class="tab" onclick="showTab('test')">🧪 Créer Test</div>
+    </div>
+
+    <!-- Onglet Liste des notifications -->
+    <div id="tab-list" class="tab-content active">
+        <div class="section">
+            <h3>📋 Notifications <span id="count-badge" class="badge">0</span></h3>
+            <button class="button" onclick="loadNotifications()">Actualiser</button>
+            <button class="button" onclick="loadNotifications(true)">Non lues seulement</button>
+            <label>
+                Limite: <input type="number" id="limit" value="10" min="1" max="50">
+            </label>
+            <div id="notifications-list"></div>
+        </div>
+    </div>
+
+    <!-- Onglet Compteur -->
+    <div id="tab-count" class="tab-content">
+        <div class="section">
+            <h3>🔢 Compteur de Notifications</h3>
+            <button class="button" onclick="getNotificationCount()">Compter</button>
+            <button class="button" onclick="getNotificationCount(true)">Avec statistiques</button>
+            <div id="count-result"></div>
+        </div>
+    </div>
+
+    <!-- Onglet Actions -->
+    <div id="tab-actions" class="tab-content">
+        <div class="section">
+            <h3>⚡ Actions sur les Notifications</h3>
+            
+            <h4>Marquer comme lu</h4>
+            <input type="number" id="mark-read-id" placeholder="ID notification">
+            <button class="button" onclick="markAsRead()">Marquer cette notification</button>
+            <button class="button" onclick="markAllAsRead()">Marquer TOUTES comme lues</button>
+            
+            <h4>Supprimer</h4>
+            <input type="number" id="delete-id" placeholder="ID notification">
+            <button class="button danger" onclick="deleteNotification()">Supprimer</button>
+            
+            <div id="actions-result"></div>
+        </div>
+    </div>
+
+    <!-- Onglet Tests -->
+    <div id="tab-test" class="tab-content">
+        <div class="section">
+            <h3>🧪 Créer Notifications de Test</h3>
+            <button class="button" onclick="createTestSignalement()">Créer un signalement (avec notifications)</button>
+            <button class="button" onclick="sendSystemNotification()">Notification système</button>
+            <div id="test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('admin_token');
+        let isAdmin = true; // Pour l'instant, on teste seulement les admins
+
+        function showTab(tabName) {
+            // Cacher tous les onglets
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            
+            // Afficher l'onglet sélectionné
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+        }
+
+        function showResult(elementId, type, message, data = null) {
+            const element = document.getElementById(elementId);
+            const className = type === 'error' ? 'error' : (type === 'success' ? 'success' : 'info');
+            
+            let html = `<div class="${className}">${message}</div>`;
+            if (data) {
+                html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            element.innerHTML = html;
+        }
+
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+
+            if (authToken) {
+                options.headers.Authorization = `Bearer ${authToken}`;
+            }
+
+            if (data && method !== 'GET') {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`http://localhost/api/${endpoint}`, options);
+                return await response.json();
+            } catch (error) {
+                return { success: false, error: 'Erreur réseau: ' + error.message };
+            }
+        }
+
+        async function loginAsAdmin() {
+            const result = await apiCall('admin/login.php', 'POST', {
+                email: 'admin@nzela.local',
+                password: 'admin123'
+            });
+
+            if (result.success) {
+                authToken = result.admin_token;
+                localStorage.setItem('admin_token', authToken);
+                document.getElementById('auth-status').innerHTML = '✅ Connecté comme Admin';
+                loadNotifications();
+            } else {
+                document.getElementById('auth-status').innerHTML = '❌ Erreur connexion';
+            }
+        }
+
+        async function logout() {
+            await apiCall('admin/logout.php', 'POST');
+            authToken = null;
+            localStorage.removeItem('admin_token');
+            document.getElementById('auth-status').innerHTML = '🚪 Déconnecté';
+        }
+
+        async function loadNotifications(unreadOnly = false) {
+            const limit = document.getElementById('limit').value;
+            const endpoint = `notifications/list.php?limit=${limit}${unreadOnly ? '&unread_only=true' : ''}`;
+            
+            const result = await apiCall(endpoint);
+
+            if (result.success) {
+                const notifications = result.data.notifications;
+                const unreadCount = result.data.meta.unread_count;
+                
+                document.getElementById('count-badge').textContent = unreadCount;
+                
+                let html = `<p><strong>${notifications.length} notifications trouvées</strong> (${unreadCount} non lues)</p>`;
+                
+                notifications.forEach(notif => {
+                    const isRead = notif.is_read == 1;
+                    html += `
+                        <div class="notification ${isRead ? 'read' : 'unread'}">
+                            <div class="header">
+                                #${notif.id} - ${notif.title} 
+                                <span style="float: right;">
+                                    <button class="button" onclick="markAsRead(${notif.id})" ${isRead ? 'disabled' : ''}>
+                                        ${isRead ? '✅' : 'Marquer lu'}
+                                    </button>
+                                    <button class="button danger" onclick="deleteNotification(${notif.id})">🗑️</button>
+                                </span>
+                            </div>
+                            <div>${notif.message}</div>
+                            <div class="meta">
+                                Type: ${notif.type} | Priorité: ${notif.priority} | 
+                                ${new Date(notif.created_at).toLocaleString()}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('notifications-list').innerHTML = html;
+            } else {
+                showResult('notifications-list', 'error', 'Erreur chargement', result);
+            }
+        }
+
+        async function getNotificationCount(includeStats = false) {
+            const endpoint = `notifications/count.php${includeStats ? '?include_stats=true' : ''}`;
+            const result = await apiCall(endpoint);
+            
+            showResult('count-result', result.success ? 'success' : 'error', 
+                      result.success ? `${result.data.unread_count} notifications non lues` : result.error, 
+                      result);
+        }
+
+        async function markAsRead(notificationId = null) {
+            const id = notificationId || document.getElementById('mark-read-id').value;
+            
+            if (!id && !confirm('Marquer toutes les notifications comme lues ?')) {
+                return;
+            }
+            
+            const data = id ? { notification_id: parseInt(id) } : { mark_all: true };
+            const result = await apiCall('notifications/mark-read.php', 'POST', data);
+            
+            showResult('actions-result', result.success ? 'success' : 'error', 
+                      result.success ? 'Marqué comme lu !' : result.error, result);
+            
+            if (result.success) {
+                loadNotifications();
+            }
+        }
+
+        async function markAllAsRead() {
+            markAsRead();
+        }
+
+        async function deleteNotification(notificationId = null) {
+            const id = notificationId || document.getElementById('delete-id').value;
+            
+            if (!id || !confirm('Supprimer cette notification ?')) {
+                return;
+            }
+            
+            const result = await apiCall(`notifications/delete.php?notification_id=${id}`, 'DELETE');
+            
+            showResult('actions-result', result.success ? 'success' : 'error', 
+                      result.success ? 'Notification supprimée !' : result.error, result);
+            
+            if (result.success) {
+                loadNotifications();
+            }
+        }
+
+        async function createTestSignalement() {
+            const testData = {
+                user_id: 1, // Assumé que l'admin a l'ID 1
+                type_id: 1,
+                titre: 'Test signalement avec notifications',
+                description: 'Ceci est un test pour vérifier les notifications.',
+                localisation: 'Test Location',
+                urgence: 'moyenne'
+            };
+            
+            const result = await apiCall('signalements/create.php', 'POST', testData);
+            showResult('test-result', result.success ? 'success' : 'error', 
+                      result.success ? 'Signalement créé ! Vérifiez les notifications.' : result.error, result);
+            
+            if (result.success) {
+                setTimeout(() => loadNotifications(), 1000);
+            }
+        }
+
+        async function sendSystemNotification() {
+            // Cette fonction nécessiterait un endpoint spécial pour les admins
+            showResult('test-result', 'info', 'Fonctionnalité TODO: endpoint admin pour créer des notifications système');
+        }
+
+        // Charger au démarrage si token présent
+        if (authToken) {
+            document.getElementById('auth-status').innerHTML = '🔄 Vérification...';
+            loginAsAdmin();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+services:
+  # Service Web (API PHP)
+  - type: web
+    name: nzela-api
+    env: php
+    buildCommand: |
+      # Installation des dépendances si nécessaire
+      echo "Building NZELA API..."
+    startCommand: |
+      # Démarrer le serveur PHP
+      php -S 0.0.0.0:$PORT -t .
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: nzela-db
+          property: host
+      - key: DB_NAME
+        fromDatabase:
+          name: nzela-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: nzela-db
+          property: user
+      - key: DB_PASS
+        fromDatabase:
+          name: nzela-db
+          property: password
+      - key: ENVIRONMENT
+        value: production
+
+  # Base de données MySQL
+  - type: pserv
+    name: nzela-db
+    env: docker
+    dockerfilePath: ./docker/mysql/Dockerfile

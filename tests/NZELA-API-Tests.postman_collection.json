@@ -1,0 +1,198 @@
+{
+	"info": {
+		"name": "NZELA API Tests",
+		"description": "Collection complète pour tester l'API NZELA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost/api",
+			"type": "string"
+		},
+		{
+			"key": "testEmail",
+			"value": "test@nzela.com",
+			"type": "string"
+		},
+		{
+			"key": "testPassword",
+			"value": "motdepasse123",
+			"type": "string"
+		},
+		{
+			"key": "signalementCode",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Types",
+			"item": [
+				{
+					"name": "Liste des types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/types/list.php",
+							"host": ["{{baseUrl}}"],
+							"path": ["types", "list.php"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Response has data', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.success).to.be.true;",
+									"    pm.expect(json.data).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Détail type ID=1",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/types/detail.php?id=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["types", "detail.php"],
+							"query": [{"key": "id", "value": "1"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Authentification",
+			"item": [
+				{
+					"name": "Inscription",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\",\n    \"email\": \"{{testEmail}}\",\n    \"password\": \"{{testPassword}}\",\n    \"phone\": \"+243 123 456 789\",\n    \"province\": \"Kinshasa\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register.php",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register.php"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Registration successful', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.success).to.be.true;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Connexion",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{testEmail}}\",\n    \"password\": \"{{testPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login.php",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login.php"]
+						}
+					}
+				},
+				{
+					"name": "Profil utilisateur",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me.php",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "me.php"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Signalements",
+			"item": [
+				{
+					"name": "Créer signalement",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type_signalement_id\": 1,\n    \"province\": \"Kinshasa\",\n    \"ville\": \"Kinshasa\",\n    \"commune\": \"Gombe\",\n    \"description\": \"Test Postman - {{$timestamp}}\",\n    \"urgence\": \"Moyen\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/signalements/create.php",
+							"host": ["{{baseUrl}}"],
+							"path": ["signalements", "create.php"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Signalement created', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.success).to.be.true;",
+									"    pm.collectionVariables.set('signalementCode', json.data.code);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Liste signalements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/signalements/list.php",
+							"host": ["{{baseUrl}}"],
+							"path": ["signalements", "list.php"]
+						}
+					}
+				},
+				{
+					"name": "Détail signalement",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/signalements/detail.php?code={{signalementCode}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["signalements", "detail.php"],
+							"query": [{"key": "code", "value": "{{signalementCode}}"}]
+						}
+					}
+				}
+			]
+		}
+	]
+}

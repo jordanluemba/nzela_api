@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Panel Administrateur - NZELA</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1400px; margin: 0 auto; }
+        .section { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .button { background: #007cba; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; margin: 3px; }
+        .button:hover { background: #005a87; }
+        .button.small { padding: 5px 10px; font-size: 0.9em; }
+        .button.danger { background: #d32f2f; }
+        .button.danger:hover { background: #b71c1c; }
+        .button.success { background: #4caf50; }
+        .button.success:hover { background: #388e3c; }
+        .error { background: #ffebee; border-left: 4px solid #f44336; padding: 10px; margin: 10px 0; }
+        .success { background: #e8f5e8; border-left: 4px solid #4caf50; padding: 10px; margin: 10px 0; }
+        .info { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 10px; margin: 10px 0; }
+        .warning { background: #fff3e0; border-left: 4px solid #ff9800; padding: 10px; margin: 10px 0; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 300px; }
+        input, select, textarea { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+        .form-group { margin: 10px 0; }
+        .form-group label { display: inline-block; width: 150px; font-weight: bold; }
+        .tabs { border-bottom: 1px solid #ddd; margin-bottom: 20px; }
+        .tab { display: inline-block; padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { border-bottom-color: #007cba; background: #f0f0f0; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .user-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; background: white; }
+        .user-card.admin { border-left: 4px solid #ff9800; }
+        .user-card.superadmin { border-left: 4px solid #e91e63; }
+        .user-card.citoyen { border-left: 4px solid #4caf50; }
+        .user-card.inactive { opacity: 0.6; background: #f5f5f5; }
+        .user-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .user-info { font-size: 0.9em; color: #666; }
+        .badge { padding: 3px 8px; border-radius: 12px; font-size: 0.8em; color: white; }
+        .badge.admin { background: #ff9800; }
+        .badge.superadmin { background: #e91e63; }
+        .badge.citoyen { background: #4caf50; }
+        .badge.active { background: #4caf50; }
+        .badge.inactive { background: #9e9e9e; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .stat-card { background: white; padding: 15px; border-radius: 5px; text-align: center; border-left: 4px solid #007cba; }
+        .stat-number { font-size: 2em; font-weight: bold; color: #007cba; }
+        .filters { background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 5% auto; padding: 20px; width: 80%; max-width: 600px; border-radius: 5px; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: black; }
+    </style>
+</head>
+<body>
+    <h1>👥 Panel Administrateur - NZELA</h1>
+    
+    <div class="info">
+        <strong>Authentification Admin :</strong>
+        <button class="button" onclick="loginAsAdmin('superadmin')">Se connecter comme Super Admin</button>
+        <button class="button" onclick="loginAsAdmin('admin')">Se connecter comme Admin</button>
+        <button class="button" onclick="logout()">Se déconnecter</button>
+        <span id="auth-status"></span>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('users')">👥 Utilisateurs</div>
+        <div class="tab" onclick="showTab('create')">➕ Créer</div>
+        <div class="tab" onclick="showTab('stats')">📊 Statistiques</div>
+        <div class="tab" onclick="showTab('logs')">📋 Logs</div>
+    </div>
+
+    <!-- Onglet Utilisateurs -->
+    <div id="tab-users" class="tab-content active">
+        <div class="filters">
+            <h3>🔍 Filtres</h3>
+            <label>Rôle: 
+                <select id="filter-role">
+                    <option value="all">Tous</option>
+                    <option value="citoyen">Citoyens</option>
+                    <option value="admin">Admins</option>
+                    <option value="superadmin">Super Admins</option>
+                </select>
+            </label>
+            <label>Statut: 
+                <select id="filter-status">
+                    <option value="all">Tous</option>
+                    <option value="active">Actifs</option>
+                    <option value="inactive">Inactifs</option>
+                </select>
+            </label>
+            <label>Recherche: 
+                <input type="text" id="filter-search" placeholder="Nom, email...">
+            </label>
+            <label>Limite: 
+                <select id="filter-limit">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                </select>
+            </label>
+            <button class="button" onclick="loadUsers()">Filtrer</button>
+            <button class="button" onclick="resetFilters()">Reset</button>
+        </div>
+
+        <div class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>👥 Liste des Utilisateurs</h3>
+                <div>
+                    <button class="button success" onclick="showCreateModal()">➕ Nouvel Utilisateur</button>
+                    <button class="button" onclick="loadUsers()">🔄 Actualiser</button>
+                </div>
+            </div>
+            <div id="pagination-info"></div>
+            <div id="users-list"></div>
+            <div id="pagination-controls"></div>
+        </div>
+    </div>
+
+    <!-- Onglet Créer -->
+    <div id="tab-create" class="tab-content">
+        <div class="section">
+            <h3>➕ Créer un Nouvel Utilisateur</h3>
+            <form id="create-user-form">
+                <div class="form-group">
+                    <label for="new-email">Email *:</label>
+                    <input type="email" id="new-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-password">Mot de passe *:</label>
+                    <input type="password" id="new-password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="new-first-name">Prénom *:</label>
+                    <input type="text" id="new-first-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-last-name">Nom *:</label>
+                    <input type="text" id="new-last-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-phone">Téléphone:</label>
+                    <input type="tel" id="new-phone">
+                </div>
+                <div class="form-group">
+                    <label for="new-province">Province:</label>
+                    <input type="text" id="new-province">
+                </div>
+                <div class="form-group">
+                    <label for="new-role">Rôle *:</label>
+                    <select id="new-role" required>
+                        <option value="citoyen">Citoyen</option>
+                        <option value="admin">Administrateur</option>
+                        <option value="superadmin">Super Administrateur</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="new-active">Actif:</label>
+                    <input type="checkbox" id="new-active" checked>
+                </div>
+                <button type="submit" class="button success">Créer l'utilisateur</button>
+            </form>
+            <div id="create-result"></div>
+        </div>
+    </div>
+
+    <!-- Onglet Statistiques -->
+    <div id="tab-stats" class="tab-content">
+        <div class="section">
+            <h3>📊 Statistiques des Utilisateurs</h3>
+            <button class="button" onclick="loadStats()">🔄 Actualiser les stats</button>
+            <div id="stats-container"></div>
+        </div>
+    </div>
+
+    <!-- Onglet Logs -->
+    <div id="tab-logs" class="tab-content">
+        <div class="section">
+            <h3>📋 Logs d'Administration</h3>
+            <div class="info">
+                <p>Consultez la table <code>admin_audit_log</code> dans phpMyAdmin pour voir l'historique complet des actions administratives.</p>
+                <p>Ou implémentez un endpoint <code>/api/admin/logs.php</code> pour afficher les logs ici.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'édition -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>✏️ Modifier l'utilisateur</h3>
+            <form id="edit-user-form">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-group">
+                    <label for="edit-email">Email:</label>
+                    <input type="email" id="edit-email">
+                </div>
+                <div class="form-group">
+                    <label for="edit-first-name">Prénom:</label>
+                    <input type="text" id="edit-first-name">
+                </div>
+                <div class="form-group">
+                    <label for="edit-last-name">Nom:</label>
+                    <input type="text" id="edit-last-name">
+                </div>
+                <div class="form-group">
+                    <label for="edit-phone">Téléphone:</label>
+                    <input type="tel" id="edit-phone">
+                </div>
+                <div class="form-group">
+                    <label for="edit-province">Province:</label>
+                    <input type="text" id="edit-province">
+                </div>
+                <div class="form-group">
+                    <label for="edit-role">Rôle:</label>
+                    <select id="edit-role">
+                        <option value="citoyen">Citoyen</option>
+                        <option value="admin">Administrateur</option>
+                        <option value="superadmin">Super Administrateur</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-new-password">Nouveau mot de passe:</label>
+                    <input type="password" id="edit-new-password" minlength="6" placeholder="Laissez vide pour ne pas changer">
+                </div>
+                <div class="form-group">
+                    <label for="edit-active">Actif:</label>
+                    <input type="checkbox" id="edit-active">
+                </div>
+                <button type="submit" class="button success">Sauvegarder</button>
+                <button type="button" class="button" onclick="closeModal()">Annuler</button>
+            </form>
+            <div id="edit-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('admin_token');
+        let currentPage = 1;
+        let currentFilters = {};
+        let currentUserRole = null;
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            
+            if (tabName === 'users') loadUsers();
+            if (tabName === 'stats') loadStats();
+        }
+
+        function showResult(elementId, type, message, data = null) {
+            const element = document.getElementById(elementId);
+            const className = type === 'error' ? 'error' : (type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info');
+            
+            let html = `<div class="${className}">${message}</div>`;
+            if (data) {
+                html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            element.innerHTML = html;
+        }
+
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+
+            if (authToken) {
+                options.headers.Authorization = `Bearer ${authToken}`;
+            }
+
+            if (data && method !== 'GET') {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`http://localhost/api/${endpoint}`, options);
+                return await response.json();
+            } catch (error) {
+                return { success: false, error: 'Erreur réseau: ' + error.message };
+            }
+        }
+
+        async function loginAsAdmin(role = 'superadmin') {
+            const credentials = {
+                'superadmin': {
+                    email: 'admin@nzela.local',
+                    password: 'admin123'
+                },
+                'admin': {
+                    email: 'admin.test@nzela.local',
+                    password: 'admin123'
+                }
+            };
+            
+            const creds = credentials[role];
+            if (!creds) {
+                document.getElementById('auth-status').innerHTML = '❌ Rôle de test invalide';
+                return;
+            }
+            
+            const result = await apiCall('admin/login.php', 'POST', creds);
+
+            if (result.success) {
+                authToken = result.admin_token;
+                localStorage.setItem('admin_token', authToken);
+                
+                // Récupérer le rôle de l'utilisateur connecté
+                checkCurrentUserRole();
+                
+                document.getElementById('auth-status').innerHTML = '✅ Connecté comme Admin';
+                loadUsers();
+            } else {
+                document.getElementById('auth-status').innerHTML = '❌ Erreur connexion: ' + (result.error || 'Inconnue');
+            }
+        }
+
+        async function logout() {
+            await apiCall('admin/logout.php', 'POST');
+            authToken = null;
+            currentUserRole = null;
+            localStorage.removeItem('admin_token');
+            document.getElementById('auth-status').innerHTML = '🚪 Déconnecté';
+        }
+
+        async function checkCurrentUserRole() {
+            const result = await apiCall('admin/me.php');
+            if (result.success) {
+                currentUserRole = result.data.role;
+                updateUIForRole(currentUserRole);
+                document.getElementById('auth-status').innerHTML = `✅ Connecté comme ${currentUserRole === 'superadmin' ? 'Super Admin' : 'Admin'}`;
+            }
+        }
+
+        function updateUIForRole(role) {
+            // Adapter l'interface selon le rôle
+            const createRoleSelect = document.getElementById('new-role');
+            const editRoleSelect = document.getElementById('edit-role');
+            
+            if (role === 'admin') {
+                // Les admins ne peuvent créer que des citoyens
+                createRoleSelect.innerHTML = '<option value="citoyen">Citoyen</option>';
+                editRoleSelect.innerHTML = '<option value="citoyen">Citoyen</option>';
+                
+                // Ajouter une note d'information
+                const createSection = document.querySelector('#tab-create .section');
+                if (!createSection.querySelector('.role-warning')) {
+                    const warning = document.createElement('div');
+                    warning.className = 'warning role-warning';
+                    warning.innerHTML = '⚠️ <strong>Permissions Admin :</strong> Vous pouvez créer et gérer uniquement des citoyens. Seuls les Super-Admins peuvent gérer les administrateurs.';
+                    createSection.insertBefore(warning, createSection.querySelector('form'));
+                }
+            } else if (role === 'superadmin') {
+                // Les superadmins peuvent tout faire
+                createRoleSelect.innerHTML = `
+                    <option value="citoyen">Citoyen</option>
+                    <option value="admin">Administrateur</option>
+                    <option value="superadmin">Super Administrateur</option>
+                `;
+                editRoleSelect.innerHTML = createRoleSelect.innerHTML;
+            }
+        }
+
+        async function loadUsers(page = 1) {
+            currentPage = page;
+            
+            // Construire les paramètres de filtre
+            const params = new URLSearchParams({
+                page: page,
+                limit: document.getElementById('filter-limit')?.value || 20,
+                role: document.getElementById('filter-role')?.value || 'all',
+                status: document.getElementById('filter-status')?.value || 'all',
+                search: document.getElementById('filter-search')?.value || ''
+            });
+
+            const result = await apiCall(`admin/users.php?${params}`);
+
+            if (result.success) {
+                displayUsers(result.data);
+            } else {
+                showResult('users-list', 'error', 'Erreur chargement utilisateurs: ' + result.error);
+            }
+        }
+
+        function displayUsers(data) {
+            const { users, pagination, stats } = data;
+            
+            // Afficher les informations de pagination
+            document.getElementById('pagination-info').innerHTML = `
+                <div class="info">
+                    <strong>Page ${pagination.page} sur ${pagination.pages}</strong> - 
+                    ${users.length} utilisateurs affichés sur ${pagination.total} total
+                </div>
+            `;
+
+            // Afficher les utilisateurs
+            let html = '';
+            users.forEach(user => {
+                const activeClass = user.is_active ? 'active' : 'inactive';
+                const roleClass = user.role;
+                
+                html += `
+                    <div class="user-card ${roleClass} ${activeClass}">
+                        <div class="user-header">
+                            <div>
+                                <strong>${user.first_name} ${user.last_name}</strong>
+                                <span class="badge ${user.role}">${user.role}</span>
+                                <span class="badge ${activeClass}">${user.is_active ? 'Actif' : 'Inactif'}</span>
+                            </div>
+                            <div>
+                                ${getActionButtonsForUser(user)}
+                            </div>
+                        </div>
+                        <div class="user-info">
+                            📧 ${user.email}<br>
+                            📱 ${user.phone || 'N/A'} | 🌍 ${user.province || 'N/A'}<br>
+                            📅 Créé: ${new Date(user.created_at).toLocaleDateString()}<br>
+                            🕐 Dernière connexion: ${user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Jamais'}
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('users-list').innerHTML = html || '<div class="info">Aucun utilisateur trouvé</div>';
+
+            // Contrôles de pagination
+            let paginationHtml = '';
+            if (pagination.has_prev) {
+                paginationHtml += `<button class="button" onclick="loadUsers(${currentPage - 1})">◀ Précédent</button>`;
+            }
+            
+            paginationHtml += ` <span>Page ${pagination.page}/${pagination.pages}</span> `;
+            
+            if (pagination.has_next) {
+                paginationHtml += `<button class="button" onclick="loadUsers(${currentPage + 1})">Suivant ▶</button>`;
+            }
+
+            document.getElementById('pagination-controls').innerHTML = paginationHtml;
+        }
+
+        async function loadStats() {
+            const result = await apiCall('admin/users.php?include_stats=true');
+            
+            if (result.success && result.data.stats) {
+                displayStats(result.data.stats);
+            } else {
+                showResult('stats-container', 'error', 'Erreur chargement statistiques');
+            }
+        }
+
+        function displayStats(stats) {
+            const html = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_citoyens || 0}</div>
+                        <div>Citoyens</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_admins || 0}</div>
+                        <div>Administrateurs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.active_users || 0}</div>
+                        <div>Utilisateurs Actifs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.recent_registrations || 0}</div>
+                        <div>Inscriptions (30j)</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('stats-container').innerHTML = html;
+        }
+
+        // Gestion des formulaires
+        document.getElementById('create-user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                email: document.getElementById('new-email').value,
+                password: document.getElementById('new-password').value,
+                first_name: document.getElementById('new-first-name').value,
+                last_name: document.getElementById('new-last-name').value,
+                phone: document.getElementById('new-phone').value,
+                province: document.getElementById('new-province').value,
+                role: document.getElementById('new-role').value,
+                is_active: document.getElementById('new-active').checked
+            };
+            
+            const result = await apiCall('admin/users.php', 'POST', formData);
+            
+            if (result.success) {
+                showResult('create-result', 'success', 'Utilisateur créé avec succès !');
+                document.getElementById('create-user-form').reset();
+                loadUsers(); // Recharger la liste
+            } else {
+                showResult('create-result', 'error', result.error);
+            }
+        });
+
+        document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                user_id: parseInt(document.getElementById('edit-user-id').value),
+                email: document.getElementById('edit-email').value,
+                first_name: document.getElementById('edit-first-name').value,
+                last_name: document.getElementById('edit-last-name').value,
+                phone: document.getElementById('edit-phone').value,
+                province: document.getElementById('edit-province').value,
+                role: document.getElementById('edit-role').value,
+                is_active: document.getElementById('edit-active').checked
+            };
+            
+            const newPassword = document.getElementById('edit-new-password').value;
+            if (newPassword) {
+                formData.new_password = newPassword;
+            }
+            
+            const result = await apiCall('admin/users.php', 'PUT', formData);
+            
+            if (result.success) {
+                showResult('edit-result', 'success', 'Utilisateur mis à jour !');
+                setTimeout(() => {
+                    closeModal();
+                    loadUsers();
+                }, 1000);
+            } else {
+                showResult('edit-result', 'error', result.error);
+            }
+        });
+
+        async function editUser(userId) {
+            // Charger les données utilisateur et ouvrir le modal
+            const result = await apiCall(`admin/users.php?user_id=${userId}`);
+            
+            if (result.success) {
+                const user = result.data.users[0]; // Assuming single user returned
+                if (user) {
+                    document.getElementById('edit-user-id').value = user.id;
+                    document.getElementById('edit-email').value = user.email;
+                    document.getElementById('edit-first-name').value = user.first_name;
+                    document.getElementById('edit-last-name').value = user.last_name;
+                    document.getElementById('edit-phone').value = user.phone || '';
+                    document.getElementById('edit-province').value = user.province || '';
+                    document.getElementById('edit-role').value = user.role;
+                    document.getElementById('edit-active').checked = user.is_active;
+                    document.getElementById('edit-new-password').value = '';
+                    
+                    document.getElementById('editModal').style.display = 'block';
+                }
+            }
+        }
+
+        async function deleteUser(userId, userEmail) {
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${userEmail} ?`)) {
+                return;
+            }
+            
+            const result = await apiCall(`admin/users.php?user_id=${userId}`, 'DELETE');
+            
+            if (result.success) {
+                alert('Utilisateur supprimé avec succès');
+                loadUsers();
+            } else {
+                alert('Erreur lors de la suppression: ' + result.error);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('edit-result').innerHTML = '';
+        }
+
+        function getActionButtonsForUser(user) {
+            let buttons = '';
+            
+            // Règles de permissions pour les boutons
+            const canEdit = (currentUserRole === 'superadmin') || 
+                           (currentUserRole === 'admin' && user.role === 'citoyen');
+            
+            const canDelete = (currentUserRole === 'superadmin') || 
+                             (currentUserRole === 'admin' && user.role === 'citoyen');
+            
+            // Empêcher la modification de soi-même pour certaines actions
+            const isSelf = false; // TODO: Comparer avec l'ID de l'utilisateur actuel
+            
+            if (canEdit) {
+                buttons += `<button class="button small" onclick="editUser(${user.id})">✏️ Modifier</button>`;
+            } else {
+                buttons += `<button class="button small" disabled title="Permissions insuffisantes">✏️ Modifier</button>`;
+            }
+            
+            if (canDelete && !isSelf) {
+                buttons += `<button class="button small danger" onclick="deleteUser(${user.id}, '${user.email}')">🗑️ Supprimer</button>`;
+            } else if (isSelf) {
+                buttons += `<button class="button small danger" disabled title="Impossible de se supprimer soi-même">🗑️ Supprimer</button>`;
+            } else {
+                buttons += `<button class="button small danger" disabled title="Permissions insuffisantes">🗑️ Supprimer</button>`;
+            }
+            
+            return buttons;
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-role').value = 'all';
+            document.getElementById('filter-status').value = 'all';
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-limit').value = '20';
+            loadUsers();
+        }
+
+        function showCreateModal() {
+            showTab('create');
+        }
+
+        // Fermer le modal si on clique à l'extérieur
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Initialiser si token présent
+        if (authToken) {
+            document.getElementById('auth-status').innerHTML = '🔄 Vérification...';
+            loginAsAdmin();
+        }
+    </script>
+</body>
+</html>

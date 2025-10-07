@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 NZELA API Tester Pro - Interface de Test Complète</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700 min-h-screen p-4">
+    <div class="max-w-7xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-8 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-12 -mb-12"></div>
+            <div class="relative">
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-4xl font-bold">🧪 NZELA API Tester Pro</h1>
+                    <div class="bg-white/20 px-4 py-2 rounded-full text-sm font-medium">
+                        v2.1 - Tailwind Edition
+                    </div>
+                </div>
+                <p class="text-xl opacity-90">Interface de test interactive pour votre API avec système d'images</p>
+            </div>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="bg-gray-50 p-6 border-b">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">URL de base de l'API</label>
+                    <input type="text" id="baseUrl" value="http://localhost/api" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email de test</label>
+                    <input type="email" id="testEmail" value="test@nzela.com" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Mot de passe de test</label>
+                    <input type="password" id="testPassword" value="motdepasse123" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+            <div id="authStatus" class="bg-red-100 text-red-700 px-4 py-3 rounded-lg font-medium">
+                ❌ Non connecté - Utilisez l'onglet Authentification pour vous connecter
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="bg-white border-b">
+            <nav class="flex space-x-0">
+                <button class="tab-btn active" onclick="switchTab('diagnostic')">🔍 Diagnostic</button>
+                <button class="tab-btn" onclick="switchTab('images')">🖼️ Images</button>
+                <button class="tab-btn" onclick="switchTab('types')">📋 Types</button>
+                <button class="tab-btn" onclick="switchTab('auth')">🔐 Auth</button>
+                <button class="tab-btn" onclick="switchTab('signalements')">📝 Signalements</button>
+                <button class="tab-btn" onclick="switchTab('upload')">📸 Upload</button>
+                <button class="tab-btn" onclick="switchTab('errors')">⚠️ Erreurs</button>
+            </nav>
+        </div>
+
+        <!-- Tab Content Container -->
+        <div class="p-6">
+            <!-- ONGLET DIAGNOSTIC -->
+            <div id="diagnostic" class="tab-content active">
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">🔍 Diagnostic du Système</h2>
+                    
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Diagnostic Complet</h3>
+                                <p class="text-gray-600">Vérifie PHP, base de données, fichiers et configuration</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testEndpoint('GET', '/diagnostic.php', null, 'diagnostic-full')" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🚀 Lancer diagnostic
+                            </button>
+                            <button onclick="clearResponse('diagnostic-full')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="diagnostic-full" class="response-area"></div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Test de Connectivité</h3>
+                                <p class="text-gray-600">Vérification rapide de la disponibilité</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testEndpoint('GET', '/diagnostic.php?quick=1', null, 'connectivity')" 
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                ⚡ Test rapide
+                            </button>
+                            <button onclick="clearResponse('connectivity')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="connectivity" class="response-area"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET IMAGES -->
+            <div id="images" class="tab-content">
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">🖼️ Test du Système d'Images</h2>
+                    
+                    <!-- Test de l'endpoint image -->
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Test Endpoint Image</h3>
+                                <p class="text-gray-600">Tester l'accès direct aux images</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Chemin de l'image à tester</label>
+                            <input type="text" id="imageTestPath" value="uploads/types/nid-de-poule.png" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testImageEndpoint()" 
+                                    class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🖼️ Tester image
+                            </button>
+                            <button onclick="clearResponse('image-test')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="image-test" class="response-area"></div>
+                    </div>
+
+                    <!-- Galerie des types avec images -->
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Galerie des Types</h3>
+                                <p class="text-gray-600">Affichage de tous les types avec leurs images</p>
+                            </div>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">API</span>
+                        </div>
+                        <div class="flex space-x-3 mb-6">
+                            <button onclick="loadImageGallery()" 
+                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🎨 Charger galerie
+                            </button>
+                            <button onclick="clearImageGallery()" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="image-gallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET TYPES -->
+            <div id="types" class="tab-content">
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 Gestion des Types</h2>
+                    
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Liste des Types</h3>
+                                <p class="text-gray-600">Récupérer tous les types de signalements</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testEndpoint('GET', '/types/list.php', null, 'types-list')" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                📋 Lister types
+                            </button>
+                            <button onclick="clearResponse('types-list')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="types-list" class="response-area"></div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Détail d'un Type</h3>
+                                <p class="text-gray-600">Récupérer les informations d'un type spécifique</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ID du type</label>
+                            <input type="number" id="typeDetailId" value="1" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testTypeDetail()" 
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🔍 Voir détail
+                            </button>
+                            <button onclick="clearResponse('type-detail')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="type-detail" class="response-area"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET AUTHENTIFICATION -->
+            <div id="auth" class="tab-content">
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">🔐 Authentification</h2>
+                    
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Inscription</h3>
+                                <p class="text-gray-600">Créer un nouveau compte utilisateur</p>
+                            </div>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">POST</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testRegister()" 
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                ✅ S'inscrire
+                            </button>
+                            <button onclick="clearResponse('register')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="register" class="response-area"></div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Connexion</h3>
+                                <p class="text-gray-600">Se connecter avec email/mot de passe</p>
+                            </div>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">POST</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testLogin()" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🔓 Se connecter
+                            </button>
+                            <button onclick="clearResponse('login')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="login" class="response-area"></div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Profil Utilisateur</h3>
+                                <p class="text-gray-600">Récupérer les informations du profil</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testProfile()" 
+                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                👤 Mon profil
+                            </button>
+                            <button onclick="clearResponse('profile')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="profile" class="response-area"></div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Déconnexion</h3>
+                                <p class="text-gray-600">Se déconnecter et invalider le token</p>
+                            </div>
+                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">POST</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testLogout()" 
+                                    class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🔒 Se déconnecter
+                            </button>
+                            <button onclick="clearResponse('logout')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="logout" class="response-area"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET SIGNALEMENTS -->
+            <div id="signalements" class="tab-content">
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 Gestion des Signalements</h2>
+                    
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Liste des Signalements</h3>
+                                <p class="text-gray-600">Récupérer tous les signalements</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testEndpoint('GET', '/signalements/list.php', null, 'signalements-list')" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                📋 Lister signalements
+                            </button>
+                            <button onclick="clearResponse('signalements-list')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="signalements-list" class="response-area"></div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Créer Signalement</h3>
+                                <p class="text-gray-600">Créer un nouveau signalement (nécessite authentification)</p>
+                            </div>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">POST</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testCreateSignalement()" 
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                ➕ Créer signalement
+                            </button>
+                            <button onclick="clearResponse('create-signalement')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="create-signalement" class="response-area"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET UPLOAD -->
+            <div id="upload" class="tab-content">
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">📸 Upload de Fichiers</h2>
+                    
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Upload Photo</h3>
+                                <p class="text-gray-600">Télécharger une photo pour un signalement</p>
+                            </div>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">POST</span>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Sélectionner un fichier</label>
+                            <input type="file" id="photoFile" accept="image/*" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testUploadPhoto()" 
+                                    class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                📸 Upload photo
+                            </button>
+                            <button onclick="clearResponse('upload-photo')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="upload-photo" class="response-area"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET TESTS D'ERREURS -->
+            <div id="errors" class="tab-content">
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">⚠️ Tests de Gestion d'Erreurs</h2>
+                    
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Endpoint Inexistant</h3>
+                                <p class="text-gray-600">Tester la gestion des erreurs 404</p>
+                            </div>
+                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">404</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testEndpoint('GET', '/inexistant.php', null, 'error-404')" 
+                                    class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                💥 Test 404
+                            </button>
+                            <button onclick="clearResponse('error-404')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="error-404" class="response-area"></div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Accès Non Autorisé</h3>
+                                <p class="text-gray-600">Tester l'accès à un endpoint protégé sans token</p>
+                            </div>
+                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">401</span>
+                        </div>
+                        <div class="flex space-x-3 mb-4">
+                            <button onclick="testUnauthorized()" 
+                                    class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🚫 Test 401
+                            </button>
+                            <button onclick="clearResponse('error-401')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div id="error-401" class="response-area"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Styles CSS pour les éléments personnalisés -->
+    <style>
+        .tab-btn {
+            padding: 1.5rem;
+            border-bottom: 2px solid transparent;
+            color: #6b7280;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            color: #2563eb;
+            border-bottom-color: #bfdbfe;
+        }
+        .tab-btn.active {
+            color: #2563eb;
+            border-bottom-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .response-area {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            min-height: 4rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+        .response-success {
+            background-color: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+        .response-error {
+            background-color: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+        .response-warning {
+            background-color: #fffbeb;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+        .loading {
+            background-color: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1e40af;
+        }
+        .loading::after {
+            content: '⏳ Chargement...';
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <script>
+        // Variables globales
+        let currentToken = null;
+        let baseApiUrl = '';
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            baseApiUrl = document.getElementById('baseUrl').value;
+            updateAuthStatus();
+        });
+
+        // Gestion des onglets
+        function switchTab(tabName) {
+            // Désactiver tous les onglets
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Activer l'onglet sélectionné
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Fonction générique pour tester un endpoint
+        async function testEndpoint(method, endpoint, data, responseId) {
+            const responseEl = document.getElementById(responseId);
+            responseEl.className = 'response-area loading';
+            responseEl.innerHTML = '';
+            
+            baseApiUrl = document.getElementById('baseUrl').value;
+            const url = baseApiUrl + endpoint;
+            
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (currentToken) {
+                options.headers['Authorization'] = 'Bearer ' + currentToken;
+            }
+            
+            if (data && (method === 'POST' || method === 'PUT')) {
+                options.body = JSON.stringify(data);
+            }
+            
+            try {
+                const startTime = performance.now();
+                const response = await fetch(url, options);
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+                
+                const responseText = await response.text();
+                let responseData;
+                
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = { raw_response: responseText };
+                }
+                
+                const statusClass = response.ok ? 'response-success' : 'response-error';
+                responseEl.className = 'response-area ' + statusClass;
+                
+                responseEl.innerHTML = `
+                    <div class="mb-2 flex justify-between items-center">
+                        <span class="font-bold">📊 Statut: ${response.status} ${response.statusText}</span>
+                        <span class="text-xs">⏱️ ${responseTime}ms</span>
+                    </div>
+                    <div class="mb-2"><strong>🔗 URL:</strong> ${method} ${url}</div>
+                    <div class="mb-2"><strong>📤 Réponse:</strong></div>
+                    <pre class="whitespace-pre-wrap bg-white p-3 rounded border overflow-auto max-h-96">${JSON.stringify(responseData, null, 2)}</pre>
+                `;
+                
+                // Mettre à jour le token si présent dans la réponse
+                if (responseData.token) {
+                    currentToken = responseData.token;
+                    updateAuthStatus();
+                }
+                
+            } catch (error) {
+                responseEl.className = 'response-area response-error';
+                responseEl.innerHTML = `
+                    <div class="mb-2"><strong>❌ Erreur de réseau:</strong></div>
+                    <div class="mb-2"><strong>🔗 URL:</strong> ${method} ${url}</div>
+                    <pre class="whitespace-pre-wrap bg-white p-3 rounded border">${error.message}</pre>
+                `;
+            }
+        }
+
+        // Fonctions spécifiques pour l'authentification
+        function testRegister() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            const userData = {
+                nom: "Test",
+                prenom: "User",
+                email: email,
+                telephone: "+243123456789",
+                password: password
+            };
+            
+            testEndpoint('POST', '/auth/register.php', userData, 'register');
+        }
+
+        function testLogin() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            const loginData = {
+                email: email,
+                password: password
+            };
+            
+            testEndpoint('POST', '/auth/login.php', loginData, 'login');
+        }
+
+        function testProfile() {
+            testEndpoint('GET', '/auth/me.php', null, 'profile');
+        }
+
+        function testLogout() {
+            testEndpoint('POST', '/auth/logout.php', {}, 'logout').then(() => {
+                currentToken = null;
+                updateAuthStatus();
+            });
+        }
+
+        // Fonction pour tester le détail d'un type
+        function testTypeDetail() {
+            const typeId = document.getElementById('typeDetailId').value;
+            testEndpoint('GET', `/types/detail.php?id=${typeId}`, null, 'type-detail');
+        }
+
+        // Fonction pour créer un signalement
+        function testCreateSignalement() {
+            const signalementData = {
+                type_id: 1,
+                localisation: "Test Avenue, Kinshasa",
+                latitude: -4.3317,
+                longitude: 15.3139,
+                description: "Test de signalement depuis l'API Tester"
+            };
+            
+            testEndpoint('POST', '/signalements/create.php', signalementData, 'create-signalement');
+        }
+
+        // Fonction pour tester l'upload de photo
+        async function testUploadPhoto() {
+            const fileInput = document.getElementById('photoFile');
+            const responseEl = document.getElementById('upload-photo');
+            
+            if (!fileInput.files[0]) {
+                responseEl.className = 'response-area response-warning';
+                responseEl.innerHTML = '⚠️ Veuillez sélectionner un fichier';
+                return;
+            }
+            
+            responseEl.className = 'response-area loading';
+            responseEl.innerHTML = '';
+            
+            const formData = new FormData();
+            formData.append('photo', fileInput.files[0]);
+            
+            baseApiUrl = document.getElementById('baseUrl').value;
+            const url = baseApiUrl + '/upload/photo.php';
+            
+            const options = {
+                method: 'POST',
+                body: formData
+            };
+            
+            if (currentToken) {
+                options.headers = {
+                    'Authorization': 'Bearer ' + currentToken
+                };
+            }
+            
+            try {
+                const startTime = performance.now();
+                const response = await fetch(url, options);
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+                
+                const responseData = await response.json();
+                
+                const statusClass = response.ok ? 'response-success' : 'response-error';
+                responseEl.className = 'response-area ' + statusClass;
+                
+                responseEl.innerHTML = `
+                    <div class="mb-2 flex justify-between items-center">
+                        <span class="font-bold">📊 Statut: ${response.status} ${response.statusText}</span>
+                        <span class="text-xs">⏱️ ${responseTime}ms</span>
+                    </div>
+                    <div class="mb-2"><strong>🔗 URL:</strong> POST ${url}</div>
+                    <div class="mb-2"><strong>📁 Fichier:</strong> ${fileInput.files[0].name} (${Math.round(fileInput.files[0].size/1024)}KB)</div>
+                    <div class="mb-2"><strong>📤 Réponse:</strong></div>
+                    <pre class="whitespace-pre-wrap bg-white p-3 rounded border overflow-auto max-h-96">${JSON.stringify(responseData, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                responseEl.className = 'response-area response-error';
+                responseEl.innerHTML = `
+                    <div class="mb-2"><strong>❌ Erreur de réseau:</strong></div>
+                    <div class="mb-2"><strong>🔗 URL:</strong> POST ${url}</div>
+                    <pre class="whitespace-pre-wrap bg-white p-3 rounded border">${error.message}</pre>
+                `;
+            }
+        }
+
+        // Fonction pour tester l'accès non autorisé
+        function testUnauthorized() {
+            const tempToken = currentToken;
+            currentToken = null; // Supprimer temporairement le token
+            testEndpoint('GET', '/auth/me.php', null, 'error-401').then(() => {
+                currentToken = tempToken; // Restaurer le token
+            });
+        }
+
+        // Fonction pour tester l'endpoint image
+        async function testImageEndpoint() {
+            const imagePath = document.getElementById('imageTestPath').value;
+            const responseEl = document.getElementById('image-test');
+            
+            responseEl.className = 'response-area loading';
+            responseEl.innerHTML = '';
+            
+            baseApiUrl = document.getElementById('baseUrl').value;
+            const url = `${baseApiUrl}/image.php?path=${encodeURIComponent(imagePath)}`;
+            
+            try {
+                const startTime = performance.now();
+                const response = await fetch(url);
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+                
+                const statusClass = response.ok ? 'response-success' : 'response-error';
+                responseEl.className = 'response-area ' + statusClass;
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const imageUrl = URL.createObjectURL(blob);
+                    
+                    responseEl.innerHTML = `
+                        <div class="mb-2 flex justify-between items-center">
+                            <span class="font-bold">📊 Statut: ${response.status} ${response.statusText}</span>
+                            <span class="text-xs">⏱️ ${responseTime}ms</span>
+                        </div>
+                        <div class="mb-2"><strong>🔗 URL:</strong> GET ${url}</div>
+                        <div class="mb-2"><strong>📊 Type:</strong> ${response.headers.get('content-type')}</div>
+                        <div class="mb-2"><strong>📦 Taille:</strong> ${Math.round(blob.size/1024)}KB</div>
+                        <div class="mb-2"><strong>🖼️ Aperçu:</strong></div>
+                        <img src="${imageUrl}" alt="Image test" class="max-w-full h-auto rounded border" style="max-height: 300px;">
+                    `;
+                } else {
+                    const responseText = await response.text();
+                    responseEl.innerHTML = `
+                        <div class="mb-2 flex justify-between items-center">
+                            <span class="font-bold">📊 Statut: ${response.status} ${response.statusText}</span>
+                            <span class="text-xs">⏱️ ${responseTime}ms</span>
+                        </div>
+                        <div class="mb-2"><strong>🔗 URL:</strong> GET ${url}</div>
+                        <div class="mb-2"><strong>❌ Erreur:</strong></div>
+                        <pre class="whitespace-pre-wrap bg-white p-3 rounded border">${responseText}</pre>
+                    `;
+                }
+                
+            } catch (error) {
+                responseEl.className = 'response-area response-error';
+                responseEl.innerHTML = `
+                    <div class="mb-2"><strong>❌ Erreur de réseau:</strong></div>
+                    <div class="mb-2"><strong>🔗 URL:</strong> GET ${url}</div>
+                    <pre class="whitespace-pre-wrap bg-white p-3 rounded border">${error.message}</pre>
+                `;
+            }
+        }
+
+        // Fonction pour charger la galerie d'images
+        async function loadImageGallery() {
+            const galleryEl = document.getElementById('image-gallery');
+            galleryEl.innerHTML = '<div class="col-span-full text-center text-gray-500">⏳ Chargement des types...</div>';
+            
+            try {
+                baseApiUrl = document.getElementById('baseUrl').value;
+                const response = await fetch(`${baseApiUrl}/types/list.php`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    galleryEl.innerHTML = '';
+                    
+                    data.data.forEach(type => {
+                        const typeCard = document.createElement('div');
+                        typeCard.className = 'bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow';
+                        
+                        typeCard.innerHTML = `
+                            <div class="aspect-square mb-3 bg-gray-100 rounded-lg overflow-hidden">
+                                <img 
+                                    src="${type.image_url}" 
+                                    alt="${type.nom}"
+                                    class="w-full h-full object-cover"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                    onload="console.log('✅ Image chargée:', '${type.nom}');"
+                                >
+                                <div class="w-full h-full bg-red-100 text-red-600 flex items-center justify-center text-sm hidden">
+                                    ❌ Image non trouvée
+                                </div>
+                            </div>
+                            <h4 class="font-semibold text-gray-800 mb-1">${type.nom}</h4>
+                            <p class="text-sm text-gray-600 mb-2 line-clamp-2">${type.description}</p>
+                            <div class="text-xs text-gray-500">
+                                <div><strong>ID:</strong> ${type.id}</div>
+                                <div><strong>Chemin:</strong> ${type.image_path}</div>
+                                <div class="mt-1">
+                                    <a href="${type.image_url}" target="_blank" 
+                                       class="text-blue-600 hover:underline">🔗 Voir image</a>
+                                </div>
+                            </div>
+                        `;
+                        
+                        galleryEl.appendChild(typeCard);
+                    });
+                } else {
+                    galleryEl.innerHTML = '<div class="col-span-full text-center text-red-600">❌ Erreur lors du chargement des types</div>';
+                }
+                
+            } catch (error) {
+                galleryEl.innerHTML = `<div class="col-span-full text-center text-red-600">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        // Fonction pour effacer la galerie
+        function clearImageGallery() {
+            document.getElementById('image-gallery').innerHTML = '';
+        }
+
+        // Fonction pour effacer une réponse
+        function clearResponse(responseId) {
+            const responseEl = document.getElementById(responseId);
+            responseEl.className = 'response-area';
+            responseEl.innerHTML = '';
+        }
+
+        // Mettre à jour le statut d'authentification
+        function updateAuthStatus() {
+            const authStatusEl = document.getElementById('authStatus');
+            
+            if (currentToken) {
+                authStatusEl.className = 'bg-green-100 text-green-700 px-4 py-3 rounded-lg font-medium';
+                authStatusEl.innerHTML = '✅ Connecté - Token valide pour les requêtes authentifiées';
+            } else {
+                authStatusEl.className = 'bg-red-100 text-red-700 px-4 py-3 rounded-lg font-medium';
+                authStatusEl.innerHTML = '❌ Non connecté - Utilisez l\'onglet Authentification pour vous connecter';
+            }
+        }
+
+        // Mettre à jour l'URL de base quand elle change
+        document.getElementById('baseUrl').addEventListener('change', function() {
+            baseApiUrl = this.value;
+        });
+
+        // Gestion des erreurs globales
+        window.addEventListener('error', function(e) {
+            console.error('Erreur JavaScript:', e.error);
+        });
+    </script>
+</body>
+</html>

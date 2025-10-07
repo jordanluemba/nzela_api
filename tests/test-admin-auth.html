@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Authentification Admin - NZELA</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .section { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .button:hover { background: #005a87; }
+        .error { background: #ffebee; border-left: 4px solid #f44336; padding: 10px; margin: 10px 0; }
+        .success { background: #e8f5e8; border-left: 4px solid #4caf50; padding: 10px; margin: 10px 0; }
+        .info { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 10px; margin: 10px 0; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Test Authentification Admin - NZELA</h1>
+    
+    <div class="info">
+        <strong>Compte Super Admin par défaut :</strong><br>
+        Email: <code>admin@nzela.local</code><br>
+        Mot de passe: <code>admin123</code>
+    </div>
+
+    <div class="section">
+        <h3>1. Connexion Admin</h3>
+        <input type="email" id="email" placeholder="Email" value="admin@nzela.local">
+        <input type="password" id="password" placeholder="Mot de passe" value="admin123">
+        <button class="button" onclick="loginAdmin()">Se connecter</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>2. Vérifier Session</h3>
+        <button class="button" onclick="checkSession()">Vérifier ma session</button>
+        <div id="session-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>3. Déconnexion</h3>
+        <button class="button" onclick="logoutAdmin()">Se déconnecter</button>
+        <div id="logout-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>4. État Global</h3>
+        <button class="button" onclick="showSessionsStatus()">Voir sessions actives</button>
+        <button class="button" onclick="showAuditLog()">Voir audit log</button>
+        <div id="status-result"></div>
+    </div>
+
+    <script>
+        let adminToken = localStorage.getItem('admin_token');
+
+        function showResult(elementId, type, message, data = null) {
+            const element = document.getElementById(elementId);
+            const className = type === 'error' ? 'error' : (type === 'success' ? 'success' : 'info');
+            
+            let html = `<div class="${className}">${message}</div>`;
+            if (data) {
+                html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            element.innerHTML = html;
+        }
+
+        async function loginAdmin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost/api/admin/login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    adminToken = result.admin_token;
+                    localStorage.setItem('admin_token', adminToken);
+                    showResult('login-result', 'success', '✅ Connexion réussie !', result);
+                } else {
+                    showResult('login-result', 'error', '❌ ' + result.error, result);
+                }
+            } catch (error) {
+                showResult('login-result', 'error', '❌ Erreur réseau: ' + error.message);
+            }
+        }
+
+        async function checkSession() {
+            if (!adminToken) {
+                showResult('session-result', 'error', '❌ Aucun token. Connectez-vous d\'abord.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost/api/admin/me.php', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showResult('session-result', 'success', '✅ Session valide !', result.data);
+                } else {
+                    showResult('session-result', 'error', '❌ ' + result.error, result);
+                }
+            } catch (error) {
+                showResult('session-result', 'error', '❌ Erreur réseau: ' + error.message);
+            }
+        }
+
+        async function logoutAdmin() {
+            if (!adminToken) {
+                showResult('logout-result', 'error', '❌ Aucun token. Déjà déconnecté.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost/api/admin/logout.php', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    adminToken = null;
+                    localStorage.removeItem('admin_token');
+                    showResult('logout-result', 'success', '✅ Déconnexion réussie !', result);
+                } else {
+                    showResult('logout-result', 'error', '❌ ' + result.error, result);
+                }
+            } catch (error) {
+                showResult('logout-result', 'error', '❌ Erreur réseau: ' + error.message);
+            }
+        }
+
+        async function showSessionsStatus() {
+            try {
+                // Test direct en base pour voir les sessions
+                showResult('status-result', 'info', '📊 Utilisation de la console pour voir les données en base. Regardez les tables admin_sessions et admin_audit_log dans phpMyAdmin.');
+            } catch (error) {
+                showResult('status-result', 'error', '❌ Erreur: ' + error.message);
+            }
+        }
+
+        async function showAuditLog() {
+            showResult('status-result', 'info', '📋 Consultez la table admin_audit_log dans phpMyAdmin pour voir l\'historique des connexions et actions admin.');
+        }
+
+        // Charger le token au démarrage si présent
+        if (adminToken) {
+            showResult('login-result', 'info', 'Token admin trouvé en localStorage. Utilisez "Vérifier Session" pour tester.');
+        }
+    </script>
+</body>
+</html>

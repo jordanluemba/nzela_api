@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NZELA API Testing Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Theme */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-accent: #e2e8f0;
+            
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-tertiary: #64748b;
+            --text-muted: #94a3b8;
+            
+            --border-primary: #e2e8f0;
+            --border-secondary: #cbd5e1;
+            --border-accent: #94a3b8;
+            
+            --accent-primary: #3b82f6;
+            --accent-secondary: #1d4ed8;
+            --accent-gradient: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --success-border: #a7f3d0;
+            
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --warning-border: #fde68a;
+            
+            --error: #ef4444;
+            --error-bg: #fef2f2;
+            --error-border: #fecaca;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: #1e293b;
+            --bg-accent: #334155;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #e2e8f0;
+            --text-tertiary: #cbd5e1;
+            --text-muted: #94a3b8;
+            
+            --border-primary: #334155;
+            --border-secondary: #475569;
+            --border-accent: #64748b;
+            
+            --accent-primary: #60a5fa;
+            --accent-secondary: #3b82f6;
+            --accent-gradient: linear-gradient(135deg, #60a5fa, #3b82f6);
+            
+            --success: #34d399;
+            --success-bg: #064e3b;
+            --success-border: #047857;
+            
+            --warning: #fbbf24;
+            --warning-bg: #451a03;
+            --warning-border: #92400e;
+            
+            --error: #f87171;
+            --error-bg: #7f1d1d;
+            --error-border: #dc2626;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 100vh;
+        }
+
+        .app-container {
+            min-height: 100vh;
+            background: var(--bg-primary);
+        }
+
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-primary);
+            padding: 2rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .header-title h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: var(--bg-accent);
+            border: 2px solid var(--border-secondary);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-switch::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 22px;
+            height: 22px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-md);
+        }
+
+        .theme-switch.active::before {
+            transform: translateX(30px);
+        }
+
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .config-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .config-item label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .config-item input {
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-secondary);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s ease;
+        }
+
+        .config-item input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .auth-status {
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-lg);
+            font-weight: 500;
+            text-align: center;
+            border: 1px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .auth-status.logged-in {
+            background: var(--success-bg);
+            border-color: var(--success-border);
+            color: var(--success);
+        }
+
+        .auth-status.logged-out {
+            background: var(--error-bg);
+            border-color: var(--error-border);
+            color: var(--error);
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-xl);
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: var(--radius-lg);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            position: relative;
+            font-size: 0.9rem;
+        }
+
+        .tab:hover {
+            background: var(--bg-accent);
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .endpoint-group {
+            margin-bottom: 3rem;
+        }
+
+        .endpoint-group h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border-primary);
+            position: relative;
+        }
+
+        .endpoint-group h3::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: var(--accent-gradient);
+        }
+
+        .endpoint-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-xl);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .endpoint-item:hover {
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .endpoint-header {
+            background: var(--bg-secondary);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-primary);
+        }
+
+        .endpoint-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .endpoint-title h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .method-badge {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .method-get { 
+            background: var(--success-bg); 
+            color: var(--success); 
+            border: 1px solid var(--success-border);
+        }
+        
+        .method-post { 
+            background: rgba(59, 130, 246, 0.1); 
+            color: var(--accent-primary); 
+            border: 1px solid var(--accent-primary);
+        }
+        
+        .method-put { 
+            background: var(--warning-bg); 
+            color: var(--warning); 
+            border: 1px solid var(--warning-border);
+        }
+        
+        .method-delete { 
+            background: var(--error-bg); 
+            color: var(--error); 
+            border: 1px solid var(--error-border);
+        }
+
+        .endpoint-url {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-tertiary);
+            padding: 0.875rem 1rem;
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border: 1px solid var(--border-secondary);
+            word-break: break-all;
+        }
+
+        .endpoint-body {
+            padding: 2rem;
+        }
+
+        .endpoint-body p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-secondary);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.5;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-right: 0.75rem;
+            margin-bottom: 0.75rem;
+            text-decoration: none;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-accent);
+            color: var(--text-primary);
+            border: 1px solid var(--border-secondary);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error), #dc2626);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #047857);
+        }
+
+        .response-section {
+            margin-top: 2rem;
+            display: none;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .response-section.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .response-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-primary);
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-success { 
+            background: var(--success-bg); 
+            color: var(--success); 
+            border: 1px solid var(--success-border);
+        }
+        
+        .status-error { 
+            background: var(--error-bg); 
+            color: var(--error); 
+            border: 1px solid var(--error-border);
+        }
+        
+        .status-warning { 
+            background: var(--warning-bg); 
+            color: var(--warning); 
+            border: 1px solid var(--warning-border);
+        }
+
+        .response-time {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .response-content {
+            background: var(--bg-primary);
+            padding: 1.5rem;
+            max-height: 500px;
+            overflow-y: auto;
+            border-top: 1px solid var(--border-primary);
+        }
+
+        .response-json {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-primary);
+            overflow-x: auto;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-secondary);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .file-upload input[type=file] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border-secondary);
+            border-radius: var(--radius-md);
+            text-align: center;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload:hover .file-upload-label {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-accent);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 1rem;
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .header-title h1 {
+                font-size: 2rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .tab {
+                flex: none;
+            }
+
+            .endpoint-header {
+                padding: 1rem;
+            }
+
+            .endpoint-body {
+                padding: 1rem;
+            }
+
+            .endpoint-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .response-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Focus indicators for accessibility */
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+
+        /* Print styles */
+        @media print {
+            .theme-toggle,
+            .btn {
+                display: none;
+            }
+            
+            .endpoint-item {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>NZELA API Testing Suite</h1>
+                    <p class="header-subtitle">Professional API Testing & Diagnostics Interface</p>
+                </div>
+                <div class="theme-toggle">
+                    <span id="theme-label">Light</span>
+                    <div class="theme-switch" id="theme-switch">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section class="config-section">
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label for="baseUrl">API Base URL</label>
+                        <input type="text" id="baseUrl" value="http://localhost/api">
+                    </div>
+                    <div class="config-item">
+                        <label for="testEmail">Test Email</label>
+                        <input type="email" id="testEmail" value="test@nzela.com">
+                    </div>
+                    <div class="config-item">
+                        <label for="testPassword">Test Password</label>
+                        <input type="password" id="testPassword" value="motdepasse123">
+                    </div>
+                </div>
+                <div class="auth-status logged-out" id="authStatus">
+                    <span>Status:</span> Not Connected - Use Authentication tab to login
+                </div>
+            </section>
+
+            <nav class="tabs">
+                <button class="tab active" onclick="switchTab('diagnostic')">Diagnostics</button>
+                <button class="tab" onclick="switchTab('types')">Types</button>
+                <button class="tab" onclick="switchTab('auth')">Authentication</button>
+                <button class="tab" onclick="switchTab('signalements')">Reports</button>
+                <button class="tab" onclick="switchTab('upload')">Upload</button>
+                <button class="tab" onclick="switchTab('errors')">Error Testing</button>
+            </nav>
+
+            <!-- DIAGNOSTICS TAB -->
+            <div id="diagnostic" class="tab-content active">
+                <div class="endpoint-group">
+                    <h3>System Diagnostics</h3>
+                    
+                    <div class="endpoint-item">
+                        <div class="endpoint-header">
+                            <div class="endpoint-title">
+                                <h4>Complete Diagnostic</h4>
+                                <span class="method-badge method-get">GET</span>
+                            </div>
+                            <div class="endpoint-url">/diagnostic.php</div>
+                        </div>
+                        <div class="endpoint-body">
+                            <p>Comprehensive system check including PHP, database, files and configuration</p>
+                            <button class="btn" onclick="testEndpoint('GET', '/diagnostic.php', null, 'diagnostic-full')">
+                                Run Diagnostic
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearResponse('diagnostic-full')">
+                                Clear
+                            </button>
+                            <div class="response-section" id="diagnostic-full-response">
+                                <div class="response-header">
+                                    <span class="status-badge" id="diagnostic-full-status"></span>
+                                    <span class="response-time" id="diagnostic-full-time"></span>
+                                </div>
+                                <div class="response-content">
+                                    <pre class="response-json" id="diagnostic-full-content"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="endpoint-item">
+                        <div class="endpoint-header">
+                            <div class="endpoint-title">
+                                <h4>Database Test</h4>
+                                <span class="method-badge method-get">GET</span>
+                            </div>
+                            <div class="endpoint-url">/test-database.php</div>
+                        </div>
+                        <div class="endpoint-body">
+                            <p>Specialized test for database connectivity and structure diagnostics</p>
+                            <button class="btn" onclick="testEndpoint('GET', '/test-database.php', null, 'test-database')">
+                                Test Database
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearResponse('test-database')">
+                                Clear
+                            </button>
+                            <div class="response-section" id="test-database-response">
+                                <div class="response-header">
+                                    <span class="status-badge" id="test-database-status"></span>
+                                    <span class="response-time" id="test-database-time"></span>
+                                </div>
+                                <div class="response-content">
+                                    <pre class="response-json" id="test-database-content"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="endpoint-item">
+                        <div class="endpoint-header">
+                            <div class="endpoint-title">
+                                <h4>Repair Database</h4>
+                                <span class="method-badge method-get">GET</span>
+                            </div>
+                            <div class="endpoint-url">/repair-database.php</div>
+                        </div>
+                        <div class="endpoint-body">
+                            <p><strong>IMPORTANT:</strong> Automatically adds missing columns (is_active, last_login, created_at)</p>
+                            <button class="btn btn-success" onclick="repairDatabase()">
+                                Repair Database
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearResponse('repair-database')">
+                                Clear
+                            </button>
+                            <div class="response-section" id="repair-database-response">
+                                <div class="response-header">
+                                    <span class="status-badge" id="repair-database-status"></span>
+                                    <span class="response-time" id="repair-database-time"></span>
+                                </div>
+                                <div class="response-content">
+                                    <pre class="response-json" id="repair-database-content"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="endpoint-item">
+                        <div class="endpoint-header">
+                            <div class="endpoint-title">
+                                <h4>Repair Reports Table</h4>
+                                <span class="method-badge method-get">GET</span>
+                            </div>
+                            <div class="endpoint-url">/repair-signalements-table.php</div>
+                        </div>
+                        <div class="endpoint-body">
+                            <p><strong>SOLUTION for 500 error:</strong> Adds missing ip_address column and other required columns</p>
+                            <button class="btn btn-danger" onclick="repairSignalementsTable()">
+                                Repair Reports Table
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearResponse('repair-signalements')">
+                                Clear
+                            </button>
+                            <div class="response-section" id="repair-signalements-response">
+                                <div class="response-header">
+                                    <span class="status-badge" id="repair-signalements-status"></span>
+                                    <span class="response-time" id="repair-signalements-time"></span>
+                                </div>
+                                <div class="response-content">
+                                    <pre class="response-json" id="repair-signalements-content"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="endpoint-item">
+                        <div class="endpoint-header">
+                            <div class="endpoint-title">
+                                <h4>Test Registration</h4>
+                                <span class="method-badge method-post">POST</span>
+                            </div>
+                            <div class="endpoint-url">/test-register.php</div>
+                        </div>
+                        <div class="endpoint-body">
+                            <div class="form-group">
+                                <label for="testRegEmail">Test Email</label>
+                                <input type="email" id="testRegEmail" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="testRegPassword">Test Password</label>
+                                <input type="password" id="testRegPassword" value="">
+                            </div>
+                            <button class="btn" onclick="testSimpleRegister()">
+                                Test Registration
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearResponse('test-register')">
+                                Clear
+                            </button>
+                            <div class="response-section" id="test-register-response">
+                                <div class="response-header">
+                                    <span class="status-badge" id="test-register-status"></span>
+                                    <span class="response-time" id="test-register-time"></span>
+                                </div>
+                                <div class="response-content">
+                                    <pre class="response-json" id="test-register-content"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="endpoint-item">
+                        <div class="endpoint-header">
+                            <div class="endpoint-title">
+                                <h4>Test Login</h4>
+                                <span class="method-badge method-post">POST</span>
+                            </div>
+                            <div class="endpoint-url">/test-login.php</div>
+                        </div>
+                        <div class="endpoint-body">
+                            <div class="form-group">
+                                <label for="testLoginEmail">Test Email</label>
+                                <input type="email" id="testLoginEmail" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="testLoginPassword">Test Password</label>
+                                <input type="password" id="testLoginPassword" value="">
+                            </div>
+                            <button class="btn" onclick="testSimpleLogin()">
+                                Test Login
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearResponse('test-login')">
+                                Clear
+                            </button>
+                            <div class="response-section" id="test-login-response">
+                                <div class="response-header">
+                                    <span class="status-badge" id="test-login-status"></span>
+                                    <span class="response-time" id="test-login-time"></span>
+                                </div>
+                                <div class="response-content">
+                                    <pre class="response-json" id="test-login-content"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="endpoint-item">
+                        <div class="endpoint-header">
+                            <div class="endpoint-title">
+                                <h4>Debug Create Step by Step</h4>
+                                <span class="method-badge method-get">GET</span>
+                            </div>
+                            <div class="endpoint-url">/debug-create.php</div>
+                        </div>
+                        <div class="endpoint-body">
+                            <p><strong>Advanced debug</strong> - Tests each step of create.php to identify 500 errors</p>
+                            <button class="btn btn-danger" onclick="testEndpoint('GET', '/debug-create.php', null, 'debug-create')">
+                                Debug Create
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearResponse('debug-create')">
+                                Clear
+                            </button>
+                            <div class="response-section" id="debug-create-response">
+                                <div class="response-header">
+                                    <span class="status-badge" id="debug-create-status"></span>
+                                    <span class="response-time" id="debug-create-time"></span>
+                                </div>
+                                <div class="response-content">
+                                    <pre class="response-json" id="debug-create-content"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional tabs would continue here... -->
+            
+        </main>
+    </div>
+
+    <script>
+        // Theme management
+        const themeSwitch = document.getElementById('theme-switch');
+        const themeLabel = document.getElementById('theme-label');
+        const body = document.body;
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+
+        themeSwitch.addEventListener('click', () => {
+            const currentTheme = body.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        });
+
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                body.setAttribute('data-theme', 'dark');
+                themeSwitch.classList.add('active');
+                themeLabel.textContent = 'Dark';
+            } else {
+                body.removeAttribute('data-theme');
+                themeSwitch.classList.remove('active');
+                themeLabel.textContent = 'Light';
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // Global variables
+        let currentUser = null;
+        let lastSignalementCode = null;
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEmailPasswordFields();
+            
+            const photoFile = document.getElementById('photoFile');
+            if (photoFile) {
+                photoFile.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const label = e.target.nextElementSibling;
+                        label.textContent = `File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                    }
+                });
+            }
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Update email/password fields
+        function updateEmailPasswordFields() {
+            const testEmail = document.getElementById('testEmail').value;
+            const testPassword = document.getElementById('testPassword').value;
+            
+            // Update diagnostic fields
+            const testRegEmail = document.getElementById('testRegEmail');
+            const testRegPassword = document.getElementById('testRegPassword');
+            const testLoginEmail = document.getElementById('testLoginEmail');
+            const testLoginPassword = document.getElementById('testLoginPassword');
+            
+            if (testRegEmail) testRegEmail.value = testEmail;
+            if (testRegPassword) testRegPassword.value = testPassword;
+            if (testLoginEmail) testLoginEmail.value = testEmail;
+            if (testLoginPassword) testLoginPassword.value = testPassword;
+        }
+
+        // Listen for config changes
+        document.getElementById('testEmail').addEventListener('input', updateEmailPasswordFields);
+        document.getElementById('testPassword').addEventListener('input', updateEmailPasswordFields);
+
+        // Main endpoint testing function
+        async function testEndpoint(method, endpoint, data, responseId) {
+            const baseUrl = document.getElementById('baseUrl').value.replace(/\/$/, '');
+            const url = baseUrl + endpoint;
+            const startTime = Date.now();
+            
+            showLoading(responseId);
+            
+            try {
+                const options = {
+                    method: method,
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data && method !== 'GET') {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(url, options);
+                const responseTime = Date.now() - startTime;
+                const responseData = await response.json();
+                
+                // Update auth status for login/logout
+                if (endpoint === '/auth/login.php' && responseData.success) {
+                    currentUser = responseData.user;
+                    updateAuthStatus(true, currentUser.firstName + ' ' + currentUser.lastName);
+                } else if (endpoint === '/auth/logout.php' && responseData.success) {
+                    currentUser = null;
+                    updateAuthStatus(false);
+                }
+                
+                // Store signalement code if created
+                if (endpoint === '/signalements/create.php' && responseData.success) {
+                    lastSignalementCode = responseData.data.code;
+                    const sigCodeField = document.getElementById('sigCode');
+                    if (sigCodeField) sigCodeField.value = lastSignalementCode;
+                }
+                
+                showResponse(responseId, response.status, responseData, responseTime);
+                
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                showResponse(responseId, 0, { error: 'Network error: ' + error.message }, responseTime);
+            }
+        }
+
+        // Specific test functions
+        function testSimpleRegister() {
+            const data = {
+                firstName: 'Test',
+                lastName: 'User',
+                email: document.getElementById('testRegEmail').value || document.getElementById('testEmail').value,
+                password: document.getElementById('testRegPassword').value || document.getElementById('testPassword').value,
+                phone: '+243 123 456 789',
+                province: 'Kinshasa'
+            };
+            testEndpoint('POST', '/test-register.php', data, 'test-register');
+        }
+
+        function testSimpleLogin() {
+            const data = {
+                email: document.getElementById('testLoginEmail').value || document.getElementById('testEmail').value,
+                password: document.getElementById('testLoginPassword').value || document.getElementById('testPassword').value
+            };
+            testEndpoint('POST', '/test-login.php', data, 'test-login');
+        }
+
+        function repairDatabase() {
+            if (confirm('WARNING: This action will modify your database by adding missing columns. Continue?')) {
+                testEndpoint('GET', '/repair-database.php', null, 'repair-database');
+            }
+        }
+
+        function repairSignalementsTable() {
+            if (confirm('REPAIR REPORTS TABLE: This action will add the ip_address column and other missing columns to the reports table. Continue?')) {
+                testEndpoint('GET', '/repair-signalements-table.php', null, 'repair-signalements');
+            }
+        }
+
+        // Utility functions
+        function showLoading(responseId) {
+            const responseSection = document.getElementById(responseId + '-response');
+            responseSection.classList.add('show');
+            
+            const statusElement = document.getElementById(responseId + '-status');
+            const timeElement = document.getElementById(responseId + '-time');
+            const contentElement = document.getElementById(responseId + '-content');
+            
+            statusElement.className = 'status-badge status-warning';
+            statusElement.innerHTML = '<div class="loading"></div> Loading...';
+            timeElement.textContent = '';
+            contentElement.textContent = 'Request in progress...';
+        }
+
+        function showResponse(responseId, status, data, responseTime) {
+            const responseSection = document.getElementById(responseId + '-response');
+            responseSection.classList.add('show');
+            
+            const statusElement = document.getElementById(responseId + '-status');
+            const timeElement = document.getElementById(responseId + '-time');
+            const contentElement = document.getElementById(responseId + '-content');
+            
+            // Status
+            if (status >= 200 && status < 300) {
+                statusElement.className = 'status-badge status-success';
+                statusElement.textContent = `${status} OK`;
+            } else if (status >= 400 && status < 500) {
+                statusElement.className = 'status-badge status-warning';
+                statusElement.textContent = `${status} Client Error`;
+            } else if (status >= 500) {
+                statusElement.className = 'status-badge status-error';
+                statusElement.textContent = `${status} Server Error`;
+            } else {
+                statusElement.className = 'status-badge status-error';
+                statusElement.textContent = `Network Error`;
+            }
+            
+            // Response time
+            timeElement.textContent = `${responseTime}ms`;
+            
+            // Content
+            contentElement.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function clearResponse(responseId) {
+            const responseSection = document.getElementById(responseId + '-response');
+            responseSection.classList.remove('show');
+        }
+
+        function updateAuthStatus(isLoggedIn, userName = '') {
+            const authStatus = document.getElementById('authStatus');
+            if (isLoggedIn) {
+                authStatus.className = 'auth-status logged-in';
+                authStatus.innerHTML = `<span>Status:</span> Connected as ${userName}`;
+            } else {
+                authStatus.className = 'auth-status logged-out';
+                authStatus.innerHTML = '<span>Status:</span> Not Connected - Use Authentication tab to login';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Final Debug - Structure Réponse API</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .debug-section { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .console-log { background: #000; color: #0f0; padding: 10px; font-family: monospace; border-radius: 5px; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .test-button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test Final Debug - Structure Réponse API</h1>
+        
+        <div class="debug-section">
+            <h3>Test avec Photo</h3>
+            <input type="file" id="photoInput" accept="image/*">
+            <button class="test-button" onclick="testWithPhoto()">Tester Création avec Photo</button>
+        </div>
+
+        <div class="debug-section">
+            <h3>Logs Console</h3>
+            <div id="console" class="console-log"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>Comparaison Structures</h3>
+            <div id="comparison"></div>
+        </div>
+    </div>
+
+    <script>
+        const apiBaseUrl = 'http://localhost/api';
+        
+        function logToConsole(message, data = null) {
+            const consoleDiv = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            let logHTML = `[${timestamp}] ${message}`;
+            if (data) {
+                logHTML += `\n${JSON.stringify(data, null, 2)}`;
+            }
+            consoleDiv.innerHTML += logHTML + '\n\n';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            console.log(message, data);
+        }
+
+        async function testWithPhoto() {
+            const photoInput = document.getElementById('photoInput');
+            
+            if (!photoInput.files[0]) {
+                alert('Veuillez sélectionner une photo d\'abord');
+                return;
+            }
+
+            logToConsole('🚀 Début du test avec photo');
+
+            try {
+                // Préparer les données selon la structure API
+                const formData = new FormData();
+                formData.append('type_signalement_id', '1');
+                formData.append('province', 'Kinshasa');
+                formData.append('ville', 'Test City');
+                formData.append('commune', 'Test Commune');
+                formData.append('quartier', 'Test Quarter');
+                formData.append('nom_rue', '123 Rue Test');
+                formData.append('description', 'Test de debug final pour comprendre la structure de réponse');
+                formData.append('urgence', 'Moyen');
+                formData.append('circulation', 'Oui');
+                formData.append('nom_citoyen', 'Test Final Debug');
+                formData.append('telephone', '0123456789');
+                formData.append('photo', photoInput.files[0]);
+
+                logToConsole('📤 Envoi de la requête API...');
+
+                // Appel API
+                const response = await fetch(`${apiBaseUrl}/signalements/create.php`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+
+                logToConsole('📨 Réponse reçue, status:', { status: response.status, ok: response.ok });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const responseData = await response.json();
+                
+                logToConsole('🔍 RESPONSE DATA COMPLET:', responseData);
+                logToConsole('🔍 responseData.data:', responseData.data);
+                logToConsole('🔍 responseData.data.photo:', responseData.data.photo);
+
+                // Simuler le traitement comme dans confirmation-signalement
+                const signalementCree = responseData.data;
+                logToConsole('🔍 signalementCree (= responseData.data):', signalementCree);
+                logToConsole('🔍 signalementCree.photo:', signalementCree.photo);
+
+                // Test des conditions
+                if (signalementCree.photo) {
+                    logToConsole('✅ signalementCree.photo existe');
+                    if (signalementCree.photo.filename) {
+                        logToConsole('✅ signalementCree.photo.filename existe:', signalementCree.photo.filename);
+                    } else {
+                        logToConsole('❌ signalementCree.photo.filename N\'EXISTE PAS');
+                    }
+                } else {
+                    logToConsole('❌ signalementCree.photo N\'EXISTE PAS');
+                }
+
+                // Afficher la comparaison
+                displayComparison(responseData);
+
+            } catch (error) {
+                logToConsole('❌ Erreur:', error.message);
+                console.error('Erreur complète:', error);
+            }
+        }
+
+        function displayComparison(responseData) {
+            const comparisonDiv = document.getElementById('comparison');
+            
+            const html = `
+                <h4>Structure de la Réponse API</h4>
+                <pre>${JSON.stringify(responseData, null, 2)}</pre>
+                
+                <h4>Accès aux Données Photo</h4>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr>
+                        <th>Chemin d'accès</th>
+                        <th>Valeur</th>
+                        <th>Type</th>
+                    </tr>
+                    <tr>
+                        <td>responseData.data</td>
+                        <td>${responseData.data ? '✅ Existe' : '❌ Null/Undefined'}</td>
+                        <td>${typeof responseData.data}</td>
+                    </tr>
+                    <tr>
+                        <td>responseData.data.photo</td>
+                        <td>${responseData.data && responseData.data.photo ? '✅ Existe' : '❌ Null/Undefined'}</td>
+                        <td>${typeof (responseData.data && responseData.data.photo)}</td>
+                    </tr>
+                    <tr>
+                        <td>responseData.data.photo.filename</td>
+                        <td>${responseData.data && responseData.data.photo && responseData.data.photo.filename ? responseData.data.photo.filename : '❌ Null/Undefined'}</td>
+                        <td>${typeof (responseData.data && responseData.data.photo && responseData.data.photo.filename)}</td>
+                    </tr>
+                    <tr>
+                        <td>responseData.data.photo.url</td>
+                        <td>${responseData.data && responseData.data.photo && responseData.data.photo.url ? responseData.data.photo.url : '❌ Null/Undefined'}</td>
+                        <td>${typeof (responseData.data && responseData.data.photo && responseData.data.photo.url)}</td>
+                    </tr>
+                </table>
+            `;
+            
+            comparisonDiv.innerHTML = html;
+        }
+
+        // Clear console on load
+        logToConsole('🔧 Test Final Debug initialisé');
+    </script>
+</body>
+</html>

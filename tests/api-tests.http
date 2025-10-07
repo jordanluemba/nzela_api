@@ -1,0 +1,154 @@
+# NZELA API - Tests Complets
+# Utilisez l'extension REST Client dans VS Code
+
+### Variables
+@baseUrl = http://localhost/api
+@email = test@nzela.com
+@password = motdepasse123
+
+###############################################
+# 1. TESTS - TYPES DE SIGNALEMENTS
+###############################################
+
+### 1.1 Lister tous les types
+GET {{baseUrl}}/types/list.php
+Content-Type: application/json
+
+### 1.2 Détail d'un type (remplacez l'ID)
+GET {{baseUrl}}/types/detail.php?id=1
+Content-Type: application/json
+
+###############################################
+# 2. TESTS - AUTHENTIFICATION
+###############################################
+
+### 2.1 Inscription utilisateur
+POST {{baseUrl}}/auth/register.php
+Content-Type: application/json
+
+{
+    "firstName": "Test",
+    "lastName": "User",
+    "email": "{{email}}",
+    "password": "{{password}}",
+    "phone": "+243 123 456 789",
+    "province": "Kinshasa"
+}
+
+### 2.2 Connexion utilisateur
+POST {{baseUrl}}/auth/login.php
+Content-Type: application/json
+
+{
+    "email": "{{email}}",
+    "password": "{{password}}"
+}
+
+### 2.3 Profil utilisateur (nécessite d'être connecté)
+GET {{baseUrl}}/auth/me.php
+Content-Type: application/json
+
+### 2.4 Déconnexion
+POST {{baseUrl}}/auth/logout.php
+Content-Type: application/json
+
+###############################################
+# 3. TESTS - SIGNALEMENTS
+###############################################
+
+### 3.1 Créer un signalement (connecté)
+POST {{baseUrl}}/signalements/create.php
+Content-Type: application/json
+
+{
+    "type_signalement_id": 1,
+    "province": "Kinshasa",
+    "ville": "Kinshasa",
+    "commune": "Gombe",
+    "quartier": "Socimat",
+    "nom_rue": "Boulevard du 30 Juin",
+    "description": "Nid de poule dangereux sur la route principale",
+    "urgence": "Urgent",
+    "circulation": "Partiellement",
+    "latitude": -4.3276,
+    "longitude": 15.3136
+}
+
+### 3.2 Créer un signalement (anonyme)
+POST {{baseUrl}}/signalements/create.php
+Content-Type: application/json
+
+{
+    "type_signalement_id": 2,
+    "province": "Kinshasa",
+    "ville": "Kinshasa",
+    "description": "Éclairage public défaillant",
+    "urgence": "Moyen",
+    "nom_citoyen": "Citoyen Anonyme",
+    "telephone": "+243 987 654 321"
+}
+
+### 3.3 Lister tous les signalements
+GET {{baseUrl}}/signalements/list.php
+Content-Type: application/json
+
+### 3.4 Lister avec filtres
+GET {{baseUrl}}/signalements/list.php?province=Kinshasa&urgence=Urgent&page=1&limit=10
+Content-Type: application/json
+
+### 3.5 Mes signalements (connecté)
+GET {{baseUrl}}/signalements/user.php
+Content-Type: application/json
+
+### 3.6 Détail d'un signalement (remplacez le code)
+GET {{baseUrl}}/signalements/detail.php?code=NZELA-20251002-1234
+Content-Type: application/json
+
+### 3.7 Mettre à jour le statut (admin seulement)
+PUT {{baseUrl}}/signalements/update-statut.php
+Content-Type: application/json
+
+{
+    "code": "NZELA-20251002-1234",
+    "statut": "En cours",
+    "commentaire": "Signalement pris en charge par les services techniques"
+}
+
+###############################################
+# 4. TESTS D'ERREURS
+###############################################
+
+### 4.1 Email déjà existant
+POST {{baseUrl}}/auth/register.php
+Content-Type: application/json
+
+{
+    "firstName": "Test2",
+    "lastName": "User2",
+    "email": "{{email}}",
+    "password": "{{password}}"
+}
+
+### 4.2 Connexion avec mauvais mot de passe
+POST {{baseUrl}}/auth/login.php
+Content-Type: application/json
+
+{
+    "email": "{{email}}",
+    "password": "mauvaisMDP"
+}
+
+### 4.3 Signalement avec type invalide
+POST {{baseUrl}}/signalements/create.php
+Content-Type: application/json
+
+{
+    "type_signalement_id": 999,
+    "province": "Kinshasa",
+    "ville": "Kinshasa",
+    "description": "Test avec type invalide"
+}
+
+### 4.4 Méthode non autorisée
+GET {{baseUrl}}/auth/register.php
+Content-Type: application/json

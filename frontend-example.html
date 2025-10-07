@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NZELA - Types de Signalements</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .types-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .type-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
+            overflow: hidden;
+        }
+
+        .type-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .type-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
+            transition: transform 0.3s ease;
+        }
+
+        .type-card:hover .type-image {
+            transform: scale(1.05);
+        }
+
+        .type-image.loading {
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        .type-image.error {
+            background: #fee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #c33;
+            font-size: 14px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .type-card h3 {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .type-card p {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+
+        .type-meta {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .types-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 20px;
+            }
+            
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚦 NZELA</h1>
+            <p>Types de signalements avec images</p>
+        </div>
+
+        <button class="refresh-btn" onclick="loadTypes()">
+            🔄 Actualiser les types
+        </button>
+
+        <div id="stats" class="stats" style="display: none;">
+            <span id="stats-text"></span>
+        </div>
+
+        <div id="loading" class="loading">
+            ⏳ Chargement des types de signalements...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="types-container" class="types-grid"></div>
+    </div>
+
+    <script>
+        // Configuration API
+        const API_BASE_URL = 'http://localhost/api';
+        
+        // Variables globales
+        let typesData = [];
+        let loadingTimeout;
+
+        // Fonction principale pour charger les types
+        async function loadTypes() {
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const containerEl = document.getElementById('types-container');
+            const statsEl = document.getElementById('stats');
+            
+            // Reset de l'interface
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            statsEl.style.display = 'none';
+            containerEl.innerHTML = '';
+
+            try {
+                console.log('🔄 Chargement des types depuis:', `${API_BASE_URL}/types/list.php`);
+                
+                const response = await fetch(`${API_BASE_URL}/types/list.php`);
+                
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📦 Données reçues:', data);
+                
+                if (data.success && data.data) {
+                    typesData = data.data;
+                    
+                    // Afficher les statistiques
+                    document.getElementById('stats-text').textContent = 
+                        `📊 ${data.count} types chargés avec succès`;
+                    statsEl.style.display = 'block';
+                    
+                    // Afficher les types
+                    displayTypes(typesData);
+                    
+                } else {
+                    throw new Error(data.error || 'Données invalides reçues de l\'API');
+                }
+                
+            } catch (error) {
+                console.error('❌ Erreur lors du chargement:', error);
+                showError(`Impossible de charger les types: ${error.message}`);
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // Fonction pour afficher les types
+        function displayTypes(types) {
+            const container = document.getElementById('types-container');
+            
+            if (!types || types.length === 0) {
+                container.innerHTML = '<div class="error">Aucun type trouvé</div>';
+                return;
+            }
+
+            container.innerHTML = types.map(type => createTypeCard(type)).join('');
+            
+            // Initialiser le lazy loading pour les images
+            initializeLazyLoading();
+        }
+
+        // Fonction pour créer une carte de type
+        function createTypeCard(type) {
+            return `
+                <div class="type-card" data-type-id="${type.id}">
+                    <img 
+                        class="type-image loading"
+                        data-src="${type.image_url}" 
+                        alt="${type.nom}"
+                        onload="handleImageLoad(this)"
+                        onerror="handleImageError(this)"
+                    >
+                    <h3>${escapeHtml(type.nom)}</h3>
+                    <p>${escapeHtml(type.description)}</p>
+                    <div class="type-meta">
+                        <div><strong>ID:</strong> ${type.id}</div>
+                        <div><strong>Ordre:</strong> ${type.ordre_affichage}</div>
+                        <div><strong>Image:</strong> <a href="${type.image_url}" target="_blank">Voir l'image</a></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Gestion du chargement des images
+        function handleImageLoad(img) {
+            img.classList.remove('loading');
+            console.log('✅ Image chargée:', img.alt);
+        }
+
+        function handleImageError(img) {
+            img.classList.remove('loading');
+            img.classList.add('error');
+            img.innerHTML = '❌ Image non disponible';
+            console.error('❌ Erreur chargement image:', img.alt);
+        }
+
+        // Lazy loading avec Intersection Observer
+        function initializeLazyLoading() {
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                            imageObserver.unobserve(img);
+                        }
+                    }
+                });
+            }, {
+                rootMargin: '50px'
+            });
+
+            // Observer toutes les images
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+
+        // Fonction pour afficher les erreurs
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        // Fonction pour échapper le HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Gestion des erreurs globales
+        window.addEventListener('error', function(e) {
+            console.error('Erreur JavaScript:', e.error);
+        });
+
+        // Chargement automatique au démarrage
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Application NZELA démarrée');
+            loadTypes();
+        });
+
+        // Rechargement périodique (optionnel)
+        // setInterval(loadTypes, 30000); // Toutes les 30 secondes
+    </script>
+</body>
+</html>

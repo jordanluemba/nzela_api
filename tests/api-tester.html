@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 NZELA API Tester Pro - Interface de Test Complète</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-bg: #2c3e50;
+            --border-color: #dee2e6;
+            --text-color: #333;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), #34495e);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:rgba(255,255,255,0.1)"/><stop offset="100%" style="stop-color:rgba(255,255,255,0)"/></linearGradient></defs><polygon fill="url(%23grad)" points="0,20 100,0 100,20"/></svg>');
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header .subtitle {
+            opacity: 0.9;
+            font-size: 1.2em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header .version {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            z-index: 1;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .config-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .config-item label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+
+        .config-item input {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .config-item input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #495057;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .endpoint-group {
+            margin-bottom: 40px;
+        }
+
+        .endpoint-group h3 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .endpoint-item {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .endpoint-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .endpoint-header {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .endpoint-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .endpoint-title h4 {
+            color: #2c3e50;
+            font-size: 1.2em;
+        }
+
+        .method-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .method-get { background: #28a745; color: white; }
+        .method-post { background: #007bff; color: white; }
+        .method-put { background: #ffc107; color: #212529; }
+        .method-delete { background: #dc3545; color: white; }
+
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 5px;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .endpoint-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-clear {
+            background: #6c757d;
+        }
+
+        .response-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .response-section.show {
+            display: block;
+        }
+
+        .response-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .status-success { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-warning { background: #fff3cd; color: #856404; }
+
+        .response-time {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .response-content {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .response-json {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            color: #495057;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .file-upload input[type=file] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 5px;
+            text-align: center;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover .file-upload-label {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        .auth-status {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .auth-status.logged-in {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .auth-status.logged-out {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                flex: 1 1 50%;
+                min-width: 150px;
+            }
+            
+            .tab-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 NZELA API Tester</h1>
+            <p>Interface de test interactive pour votre API</p>
+        </div>
+
+        <div class="config-section">
+            <div class="config-grid">
+                <div class="config-item">
+                    <label for="baseUrl">URL de base de l'API</label>
+                    <input type="text" id="baseUrl" value="http://localhost/api">
+                </div>
+                <div class="config-item">
+                    <label for="testEmail">Email de test</label>
+                    <input type="email" id="testEmail" value="test@nzela.com">
+                </div>
+                <div class="config-item">
+                    <label for="testPassword">Mot de passe de test</label>
+                    <input type="password" id="testPassword" value="motdepasse123">
+                </div>
+            </div>
+            <div class="auth-status logged-out" id="authStatus">
+                ❌ Non connecté - Utilisez l'onglet Authentification pour vous connecter
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('diagnostic')">🔍 Diagnostic</button>
+            <button class="tab" onclick="switchTab('types')">📋 Types</button>
+            <button class="tab" onclick="switchTab('auth')">🔐 Authentification</button>
+            <button class="tab" onclick="switchTab('signalements')">📝 Signalements</button>
+            <button class="tab" onclick="switchTab('upload')">📸 Upload</button>
+            <button class="tab" onclick="switchTab('errors')">⚠️ Tests d'Erreurs</button>
+        </div>
+
+        <!-- ONGLET DIAGNOSTIC -->
+        <div id="diagnostic" class="tab-content active">
+            <div class="endpoint-group">
+                <h3>🔍 Diagnostic du Système</h3>
+                
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Diagnostic Complet</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/diagnostic.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Vérifie PHP, base de données, fichiers et configuration</em></p>
+                        <button class="btn" onclick="testEndpoint('GET', '/diagnostic.php', null, 'diagnostic-full')">
+                            🚀 Lancer diagnostic
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('diagnostic-full')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="diagnostic-full-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="diagnostic-full-status"></span>
+                                <span class="response-time" id="diagnostic-full-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="diagnostic-full-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Test Base de Données</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/test-database.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Test spécialisé pour diagnostiquer les problèmes de base de données</em></p>
+                        <button class="btn" onclick="testEndpoint('GET', '/test-database.php', null, 'test-database')">
+                            🚀 Tester base de données
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('test-database')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="test-database-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="test-database-status"></span>
+                                <span class="response-time" id="test-database-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="test-database-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>🔧 Réparer Base de Données</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/repair-database.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em><strong>IMPORTANT:</strong> Ajoute automatiquement les colonnes manquantes (is_active, last_login, created_at)</em></p>
+                        <button class="btn" onclick="repairDatabase()" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                            🔧 RÉPARER LA BASE DE DONNÉES
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('repair-database')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="repair-database-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="repair-database-status"></span>
+                                <span class="response-time" id="repair-database-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="repair-database-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>🔧 Réparer Table Signalements</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/repair-signalements-table.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em><strong>SOLUTION pour l'erreur 500:</strong> Ajoute la colonne ip_address manquante et autres colonnes requises</em></p>
+                        <button class="btn" onclick="repairSignalementsTable()" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                            🔧 RÉPARER TABLE SIGNALEMENTS
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('repair-signalements')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="repair-signalements-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="repair-signalements-status"></span>
+                                <span class="response-time" id="repair-signalements-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="repair-signalements-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Test Inscription Simplifié</h4>
+                            <span class="method-badge method-post">POST</span>
+                        </div>
+                        <div class="endpoint-url">/test-register.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="form-group">
+                            <label for="testRegEmail">Email de test</label>
+                            <input type="email" id="testRegEmail" value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="testRegPassword">Mot de passe de test</label>
+                            <input type="password" id="testRegPassword" value="">
+                        </div>
+                        <button class="btn" onclick="testSimpleRegister()">
+                            🚀 Test inscription
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('test-register')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="test-register-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="test-register-status"></span>
+                                <span class="response-time" id="test-register-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="test-register-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Test Connexion Simplifié</h4>
+                            <span class="method-badge method-post">POST</span>
+                        </div>
+                        <div class="endpoint-url">/test-login.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="form-group">
+                            <label for="testLoginEmail">Email de test</label>
+                            <input type="email" id="testLoginEmail" value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="testLoginPassword">Mot de passe de test</label>
+                            <input type="password" id="testLoginPassword" value="">
+                        </div>
+                        <button class="btn" onclick="testSimpleLogin()">
+                            🚀 Test connexion
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('test-login')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="test-login-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="test-login-status"></span>
+                                <span class="response-time" id="test-login-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="test-login-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Test Types Detail</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/test-types-detail.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Test spécialisé pour diagnostiquer types/detail.php et le modèle TypeSignalement</em></p>
+                        <button class="btn" onclick="testEndpoint('GET', '/test-types-detail.php', null, 'test-types-detail')">
+                            🚀 Tester types/detail
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('test-types-detail')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="test-types-detail-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="test-types-detail-status"></span>
+                                <span class="response-time" id="test-types-detail-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="test-types-detail-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Test Signalements Create</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/test-signalements-create.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Test spécialisé pour diagnostiquer signalements/create.php et ses dépendances</em></p>
+                        <button class="btn" onclick="testEndpoint('GET', '/test-signalements-create.php', null, 'test-signalements-create')">
+                            🚀 Tester signalements/create
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('test-signalements-create')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="test-signalements-create-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="test-signalements-create-status"></span>
+                                <span class="response-time" id="test-signalements-create-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="test-signalements-create-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>🐞 Debug Create Étape par Étape</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/debug-create.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em><strong>Debug avancé</strong> - Teste chaque étape de create.php pour identifier l'erreur 500</em></p>
+                        <button class="btn" onclick="testEndpoint('GET', '/debug-create.php', null, 'debug-create')" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                            🐞 DEBUG CREATE
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('debug-create')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="debug-create-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="debug-create-status"></span>
+                                <span class="response-time" id="debug-create-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="debug-create-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET TYPES -->
+        <div id="types" class="tab-content">
+            <div class="endpoint-group">
+                <h3>📋 Types de Signalements</h3>
+                
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Liste des types</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/types/list.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <button class="btn" onclick="testEndpoint('GET', '/types/list.php', null, 'types-list')">
+                            🚀 Tester
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('types-list')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="types-list-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="types-list-status"></span>
+                                <span class="response-time" id="types-list-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="types-list-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Détail d'un type</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/types/detail.php?id={id}</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="form-group">
+                            <label for="typeId">ID du type</label>
+                            <input type="number" id="typeId" value="1" min="1">
+                        </div>
+                        <button class="btn" onclick="testTypeDetail()">
+                            🚀 Tester
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('type-detail')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="type-detail-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="type-detail-status"></span>
+                                <span class="response-time" id="type-detail-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="type-detail-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Supprimer un type</h4>
+                            <span class="method-badge method-delete">DELETE</span>
+                        </div>
+                        <div class="endpoint-url">/types/delete.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>⚠️ Admin uniquement - Supprime définitivement un type</em></p>
+                        <div class="form-group">
+                            <label for="deleteTypeId">ID du type à supprimer</label>
+                            <input type="number" id="deleteTypeId" placeholder="ex: 1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="forceDeleteType"> Forcer la suppression (même si utilisé)
+                            </label>
+                        </div>
+                        <button class="btn btn-danger" onclick="testDeleteType()">
+                            🗑️ Supprimer
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('delete-type')">
+                            🔄 Effacer
+                        </button>
+                        <div class="response-section" id="delete-type-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="delete-type-status"></span>
+                                <span class="response-time" id="delete-type-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="delete-type-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET AUTHENTIFICATION -->
+        <div id="auth" class="tab-content">
+            <div class="endpoint-group">
+                <h3>🔐 Authentification</h3>
+                
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Inscription</h4>
+                            <span class="method-badge method-post">POST</span>
+                        </div>
+                        <div class="endpoint-url">/auth/register.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="form-group">
+                            <label for="regFirstName">Prénom</label>
+                            <input type="text" id="regFirstName" value="Test">
+                        </div>
+                        <div class="form-group">
+                            <label for="regLastName">Nom</label>
+                            <input type="text" id="regLastName" value="User">
+                        </div>
+                        <div class="form-group">
+                            <label for="regEmail">Email</label>
+                            <input type="email" id="regEmail" value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="regPassword">Mot de passe</label>
+                            <input type="password" id="regPassword" value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="regPhone">Téléphone (optionnel)</label>
+                            <input type="text" id="regPhone" value="+243 123 456 789">
+                        </div>
+                        <div class="form-group">
+                            <label for="regProvince">Province (optionnelle)</label>
+                            <input type="text" id="regProvince" value="Kinshasa">
+                        </div>
+                        <button class="btn" onclick="testRegister()">
+                            🚀 S'inscrire
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('register')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="register-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="register-status"></span>
+                                <span class="response-time" id="register-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="register-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Connexion</h4>
+                            <span class="method-badge method-post">POST</span>
+                        </div>
+                        <div class="endpoint-url">/auth/login.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="form-group">
+                            <label for="loginEmail">Email</label>
+                            <input type="email" id="loginEmail" value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Mot de passe</label>
+                            <input type="password" id="loginPassword" value="">
+                        </div>
+                        <button class="btn" onclick="testLogin()">
+                            🚀 Se connecter
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('login')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="login-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="login-status"></span>
+                                <span class="response-time" id="login-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="login-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Profil utilisateur</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/auth/me.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Nécessite d'être connecté</em></p>
+                        <button class="btn" onclick="testEndpoint('GET', '/auth/me.php', null, 'profile')">
+                            🚀 Voir profil
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('profile')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="profile-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="profile-status"></span>
+                                <span class="response-time" id="profile-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="profile-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Déconnexion</h4>
+                            <span class="method-badge method-post">POST</span>
+                        </div>
+                        <div class="endpoint-url">/auth/logout.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <button class="btn" onclick="testLogout()">
+                            🚀 Se déconnecter
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('logout')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="logout-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="logout-status"></span>
+                                <span class="response-time" id="logout-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="logout-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Mettre à jour le profil</h4>
+                            <span class="method-badge method-put">PUT</span>
+                        </div>
+                        <div class="endpoint-url">/auth/update.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Nécessite d'être connecté</em></p>
+                        <div class="form-group">
+                            <label for="updateFirstName">Nouveau prénom</label>
+                            <input type="text" id="updateFirstName" placeholder="ex: Jean">
+                        </div>
+                        <div class="form-group">
+                            <label for="updateLastName">Nouveau nom</label>
+                            <input type="text" id="updateLastName" placeholder="ex: Dupont">
+                        </div>
+                        <div class="form-group">
+                            <label for="updateEmail">Nouvel email</label>
+                            <input type="email" id="updateEmail" placeholder="ex: nouveau@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="updatePhone">Nouveau téléphone</label>
+                            <input type="text" id="updatePhone" placeholder="ex: +243 123 456 789">
+                        </div>
+                        <div class="form-group">
+                            <label for="updateProvince">Nouvelle province</label>
+                            <input type="text" id="updateProvince" placeholder="ex: Kinshasa">
+                        </div>
+                        <div class="form-group">
+                            <label for="currentPassword">Mot de passe actuel (pour changer le mot de passe)</label>
+                            <input type="password" id="currentPassword" placeholder="Mot de passe actuel">
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">Nouveau mot de passe</label>
+                            <input type="password" id="newPassword" placeholder="Nouveau mot de passe">
+                        </div>
+                        <button class="btn" onclick="testUpdateProfile()">
+                            🔄 Mettre à jour
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('update-profile')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="update-profile-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="update-profile-status"></span>
+                                <span class="response-time" id="update-profile-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="update-profile-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Supprimer mon compte</h4>
+                            <span class="method-badge method-delete">DELETE</span>
+                        </div>
+                        <div class="endpoint-url">/auth/delete.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>⚠️ Action irréversible - Supprime définitivement votre compte</em></p>
+                        <div class="form-group">
+                            <label for="deletePassword">Mot de passe (confirmation requise)</label>
+                            <input type="password" id="deletePassword" placeholder="Votre mot de passe">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="keepSignalements"> Conserver mes signalements (anonymisés)
+                            </label>
+                        </div>
+                        <button class="btn btn-danger" onclick="testDeleteAccount()">
+                            💀 Supprimer mon compte
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('delete-account')">
+                            🔄 Effacer
+                        </button>
+                        <div class="response-section" id="delete-account-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="delete-account-status"></span>
+                                <span class="response-time" id="delete-account-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="delete-account-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET SIGNALEMENTS -->
+        <div id="signalements" class="tab-content">
+            <div class="endpoint-group">
+                <h3>📝 Signalements</h3>
+                
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Créer un signalement avec photo</h4>
+                            <span class="method-badge method-post">POST</span>
+                        </div>
+                        <div class="endpoint-url">/signalements/create.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="form-group">
+                            <label for="sigTypeId">Type de signalement ID</label>
+                            <input type="number" id="sigTypeId" value="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="sigProvince">Province</label>
+                            <input type="text" id="sigProvince" value="Kinshasa">
+                        </div>
+                        <div class="form-group">
+                            <label for="sigVille">Ville</label>
+                            <input type="text" id="sigVille" value="Kinshasa">
+                        </div>
+                        <div class="form-group">
+                            <label for="sigCommune">Commune (optionnelle)</label>
+                            <input type="text" id="sigCommune" value="Brazzaville">
+                        </div>
+                        <div class="form-group">
+                            <label for="sigQuartier">Quartier (optionnel)</label>
+                            <input type="text" id="sigQuartier" value="Poto-Poto">
+                        </div>
+                        <div class="form-group">
+                            <label for="sigNomRue">Nom de la rue (optionnel)</label>
+                            <input type="text" id="sigNomRue" value="Avenue Félix Eboué">
+                        </div>
+                        <div class="form-group">
+                            <label for="sigLatitude">Latitude (optionnel)</label>
+                            <input type="number" id="sigLatitude" step="any" value="-4.2634" placeholder="ex: -4.2634">
+                        </div>
+                        <div class="form-group">
+                            <label for="sigLongitude">Longitude (optionnel)</label>
+                            <input type="number" id="sigLongitude" step="any" value="15.2429" placeholder="ex: 15.2429">
+                        </div>
+                        <div class="form-group">
+                            <label for="sigDescription">Description</label>
+                            <textarea id="sigDescription">Route endommagée avec nids de poule dangereux - Test avec photo depuis l'interface HTML</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="sigUrgence">Urgence</label>
+                            <select id="sigUrgence">
+                                <option value="Urgent">Urgent</option>
+                                <option value="Moyen" selected>Moyen</option>
+                                <option value="Faible">Faible</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sigCirculation">Impact sur la circulation</label>
+                            <select id="sigCirculation">
+                                <option value="">Non spécifié</option>
+                                <option value="Oui, totalement">Oui, totalement</option>
+                                <option value="Partiellement" selected>Partiellement</option>
+                                <option value="Non">Non</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sigNomCitoyen">Nom du citoyen (optionnel)</label>
+                            <input type="text" id="sigNomCitoyen" value="Jean Dupont" placeholder="Nom du signaleur">
+                        </div>
+                        <div class="form-group">
+                            <label for="sigTelephone">Téléphone (optionnel)</label>
+                            <input type="text" id="sigTelephone" value="06 123 45 67" placeholder="Numéro de téléphone">
+                        </div>
+                        <div class="form-group">
+                            <label for="sigPhoto">Photo (optionnelle)</label>
+                            <div class="file-upload">
+                                <input type="file" id="sigPhoto" accept="image/jpeg,image/png,image/webp,image/gif">
+                                <label for="sigPhoto" class="file-upload-label">
+                                    📷 Cliquez pour sélectionner une photo (JPG, PNG, WebP, GIF max 5MB)
+                                </label>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="btn" onclick="testCreateSignalementWithPhoto()">
+                                🚀 Créer avec photo
+                            </button>
+                            <button class="btn" style="background: linear-gradient(135deg, #6c757d, #5a6268);" onclick="testCreateSignalementJSON()">
+                                📝 Créer sans photo (JSON)
+                            </button>
+                            <button class="btn btn-clear" onclick="clearResponse('create-signalement')">
+                                🗑️ Effacer
+                            </button>
+                        </div>
+                        <div class="response-section" id="create-signalement-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="create-signalement-status"></span>
+                                <span class="response-time" id="create-signalement-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="create-signalement-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Liste des signalements</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/signalements/list.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="form-group">
+                            <label for="listProvince">Filtrer par province (optionnel)</label>
+                            <input type="text" id="listProvince" placeholder="ex: Kinshasa">
+                        </div>
+                        <div class="form-group">
+                            <label for="listUrgence">Filtrer par urgence (optionnel)</label>
+                            <select id="listUrgence">
+                                <option value="">Toutes</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="Moyen">Moyen</option>
+                                <option value="Faible">Faible</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="listLimit">Limite (nombre de résultats)</label>
+                            <input type="number" id="listLimit" value="10" min="1" max="100">
+                        </div>
+                        <button class="btn" onclick="testListSignalements()">
+                            🚀 Lister signalements
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('list-signalements')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="list-signalements-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="list-signalements-status"></span>
+                                <span class="response-time" id="list-signalements-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="list-signalements-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Détail d'un signalement</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/signalements/detail.php?code={code}</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="form-group">
+                            <label for="sigCode">Code du signalement</label>
+                            <input type="text" id="sigCode" placeholder="ex: NZELA-20251002-1234">
+                        </div>
+                        <button class="btn" onclick="testSignalementDetail()">
+                            🚀 Voir détail
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('signalement-detail')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="signalement-detail-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="signalement-detail-status"></span>
+                                <span class="response-time" id="signalement-detail-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="signalement-detail-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Mes signalements</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/signalements/user.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Nécessite d'être connecté</em></p>
+                        <button class="btn" onclick="testEndpoint('GET', '/signalements/user.php', null, 'user-signalements')">
+                            🚀 Mes signalements
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('user-signalements')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="user-signalements-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="user-signalements-status"></span>
+                                <span class="response-time" id="user-signalements-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="user-signalements-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Mettre à jour un signalement</h4>
+                            <span class="method-badge method-put">PUT</span>
+                        </div>
+                        <div class="endpoint-url">/signalements/update.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Nécessite d'être connecté - Mise à jour de ses propres signalements</em></p>
+                        <div class="form-group">
+                            <label for="updateSigId">ID du signalement</label>
+                            <input type="number" id="updateSigId" placeholder="ex: 1">
+                        </div>
+                        <div class="form-group">
+                            <label for="updateSigDescription">Nouvelle description</label>
+                            <textarea id="updateSigDescription" placeholder="Nouvelle description du problème"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="updateSigUrgence">Niveau d'urgence</label>
+                            <select id="updateSigUrgence">
+                                <option value="">-- Garder actuel --</option>
+                                <option value="Faible">Faible</option>
+                                <option value="Moyen">Moyen</option>
+                                <option value="Élevé">Élevé</option>
+                                <option value="Critique">Critique</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="testUpdateSignalement()">
+                            🔄 Mettre à jour
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('update-signalement')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="update-signalement-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="update-signalement-status"></span>
+                                <span class="response-time" id="update-signalement-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="update-signalement-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Supprimer un signalement</h4>
+                            <span class="method-badge method-delete">DELETE</span>
+                        </div>
+                        <div class="endpoint-url">/signalements/delete.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Nécessite d'être connecté - Suppression de ses propres signalements</em></p>
+                        <div class="form-group">
+                            <label for="deleteSigId">ID du signalement</label>
+                            <input type="number" id="deleteSigId" placeholder="ex: 1">
+                        </div>
+                        <button class="btn btn-danger" onclick="testDeleteSignalement()">
+                            🗑️ Supprimer
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('delete-signalement')">
+                            🔄 Effacer
+                        </button>
+                        <div class="response-section" id="delete-signalement-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="delete-signalement-status"></span>
+                                <span class="response-time" id="delete-signalement-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="delete-signalement-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET UPLOAD -->
+        <div id="upload" class="tab-content">
+            <div class="endpoint-group">
+                <h3>📸 Upload de Photos</h3>
+                
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Upload photo</h4>
+                            <span class="method-badge method-post">POST</span>
+                        </div>
+                        <div class="endpoint-url">/upload/photo.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="form-group">
+                            <label for="photoFile">Sélectionner une photo</label>
+                            <div class="file-upload">
+                                <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp">
+                                <label for="photoFile" class="file-upload-label">
+                                    📷 Cliquez pour sélectionner une image (JPG, PNG, WebP)
+                                </label>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="testUpload()">
+                            🚀 Upload photo
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('upload')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="upload-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="upload-status"></span>
+                                <span class="response-time" id="upload-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="upload-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET TESTS D'ERREURS -->
+        <div id="errors" class="tab-content">
+            <div class="endpoint-group">
+                <h3>⚠️ Tests de Gestion d'Erreurs</h3>
+                
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Email déjà existant</h4>
+                            <span class="method-badge method-post">POST</span>
+                        </div>
+                        <div class="endpoint-url">/auth/register.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Test avec un email déjà utilisé (doit retourner erreur 409)</em></p>
+                        <button class="btn" onclick="testDuplicateEmail()">
+                            🚀 Tester email dupliqué
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('duplicate-email')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="duplicate-email-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="duplicate-email-status"></span>
+                                <span class="response-time" id="duplicate-email-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="duplicate-email-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Mauvais mot de passe</h4>
+                            <span class="method-badge method-post">POST</span>
+                        </div>
+                        <div class="endpoint-url">/auth/login.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Test avec un mauvais mot de passe (doit retourner erreur 401)</em></p>
+                        <button class="btn" onclick="testBadPassword()">
+                            🚀 Tester mauvais mot de passe
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('bad-password')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="bad-password-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="bad-password-status"></span>
+                                <span class="response-time" id="bad-password-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="bad-password-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Données manquantes</h4>
+                            <span class="method-badge method-post">POST</span>
+                        </div>
+                        <div class="endpoint-url">/signalements/create.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Test sans données requises (doit retourner erreur 400)</em></p>
+                        <button class="btn" onclick="testMissingData()">
+                            🚀 Tester données manquantes
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('missing-data')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="missing-data-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="missing-data-status"></span>
+                                <span class="response-time" id="missing-data-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="missing-data-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint-item">
+                    <div class="endpoint-header">
+                        <div class="endpoint-title">
+                            <h4>Méthode non autorisée</h4>
+                            <span class="method-badge method-get">GET</span>
+                        </div>
+                        <div class="endpoint-url">/auth/register.php</div>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><em>Test GET sur endpoint POST (doit retourner erreur 405)</em></p>
+                        <button class="btn" onclick="testWrongMethod()">
+                            🚀 Tester méthode incorrecte
+                        </button>
+                        <button class="btn btn-clear" onclick="clearResponse('wrong-method')">
+                            🗑️ Effacer
+                        </button>
+                        <div class="response-section" id="wrong-method-response">
+                            <div class="response-header">
+                                <span class="status-badge" id="wrong-method-status"></span>
+                                <span class="response-time" id="wrong-method-time"></span>
+                            </div>
+                            <div class="response-content">
+                                <pre class="response-json" id="wrong-method-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let lastSignalementCode = null;
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Préremplir les champs email et password avec les valeurs de configuration
+            updateEmailPasswordFields();
+            
+            // Gérer le changement de fichier pour l'upload standalone
+            document.getElementById('photoFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const label = e.target.nextElementSibling;
+                    label.textContent = `📷 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                }
+            });
+            
+            // Gérer le changement de fichier pour la photo de signalement
+            document.getElementById('sigPhoto').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const label = e.target.nextElementSibling;
+                    label.textContent = `📷 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                    
+                    // Validation de taille (5MB max)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('⚠️ Fichier trop volumineux ! Maximum 5MB autorisé.');
+                        e.target.value = '';
+                        label.textContent = '📷 Cliquez pour sélectionner une photo (JPG, PNG, WebP, GIF max 5MB)';
+                        return;
+                    }
+                    
+                    // Validation de type
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+                    if (!allowedTypes.includes(file.type)) {
+                        alert('⚠️ Type de fichier non autorisé ! Utilisez JPG, PNG, WebP ou GIF.');
+                        e.target.value = '';
+                        label.textContent = '📷 Cliquez pour sélectionner une photo (JPG, PNG, WebP, GIF max 5MB)';
+                        return;
+                    }
+                } else {
+                    const label = e.target.nextElementSibling;
+                    label.textContent = '📷 Cliquez pour sélectionner une photo (JPG, PNG, WebP, GIF max 5MB)';
+                }
+            });
+        });
+
+        // Fonction pour changer d'onglet
+        function switchTab(tabName) {
+            // Masquer tous les onglets
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Désactiver tous les boutons d'onglet
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Activer l'onglet sélectionné
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Fonction pour mettre à jour les champs email/password
+        function updateEmailPasswordFields() {
+            const testEmail = document.getElementById('testEmail').value;
+            const testPassword = document.getElementById('testPassword').value;
+            
+            // Champs d'authentification normaux
+            document.getElementById('regEmail').value = testEmail;
+            document.getElementById('regPassword').value = testPassword;
+            document.getElementById('loginEmail').value = testEmail;
+            document.getElementById('loginPassword').value = testPassword;
+            
+            // Champs de diagnostic
+            document.getElementById('testRegEmail').value = testEmail;
+            document.getElementById('testRegPassword').value = testPassword;
+            document.getElementById('testLoginEmail').value = testEmail;
+            document.getElementById('testLoginPassword').value = testPassword;
+        }
+
+        // Écouter les changements de configuration
+        document.getElementById('testEmail').addEventListener('input', updateEmailPasswordFields);
+        document.getElementById('testPassword').addEventListener('input', updateEmailPasswordFields);
+
+        // Fonction principale pour tester un endpoint
+        async function testEndpoint(method, endpoint, data, responseId) {
+            const baseUrl = document.getElementById('baseUrl').value.replace(/\/$/, '');
+            const url = baseUrl + endpoint;
+            const startTime = Date.now();
+            
+            // Afficher le loading
+            showLoading(responseId);
+            
+            try {
+                const options = {
+                    method: method,
+                    credentials: 'include', // Inclure les cookies de session
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data && method !== 'GET') {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(url, options);
+                const responseTime = Date.now() - startTime;
+                const responseData = await response.json();
+                
+                // Mettre à jour l'état d'authentification si c'est un login/logout réussi
+                if (endpoint === '/auth/login.php' && responseData.success) {
+                    currentUser = responseData.user;
+                    updateAuthStatus(true, currentUser.firstName + ' ' + currentUser.lastName);
+                } else if (endpoint === '/auth/logout.php' && responseData.success) {
+                    currentUser = null;
+                    updateAuthStatus(false);
+                }
+                
+                // Stocker le code du signalement si créé avec succès
+                if (endpoint === '/signalements/create.php' && responseData.success) {
+                    lastSignalementCode = responseData.data.code;
+                    document.getElementById('sigCode').value = lastSignalementCode;
+                }
+                
+                showResponse(responseId, response.status, responseData, responseTime);
+                
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                showResponse(responseId, 0, { error: 'Erreur réseau: ' + error.message }, responseTime);
+            }
+        }
+
+        // Fonction pour tester l'upload de fichier
+        async function testUpload() {
+            const baseUrl = document.getElementById('baseUrl').value.replace(/\/$/, '');
+            const url = baseUrl + '/upload/photo.php';
+            const fileInput = document.getElementById('photoFile');
+            const startTime = Date.now();
+            
+            if (!fileInput.files[0]) {
+                alert('Veuillez sélectionner un fichier');
+                return;
+            }
+            
+            showLoading('upload');
+            
+            try {
+                const formData = new FormData();
+                formData.append('photo', fileInput.files[0]);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const responseData = await response.json();
+                
+                showResponse('upload', response.status, responseData, responseTime);
+                
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                showResponse('upload', 0, { error: 'Erreur réseau: ' + error.message }, responseTime);
+            }
+        }
+
+        // Fonctions spécifiques pour chaque endpoint
+        function testTypeDetail() {
+            const typeId = document.getElementById('typeId').value;
+            testEndpoint('GET', `/types/detail.php?id=${typeId}`, null, 'type-detail');
+        }
+
+        function testSimpleRegister() {
+            const data = {
+                firstName: 'Test',
+                lastName: 'User',
+                email: document.getElementById('testRegEmail').value || document.getElementById('testEmail').value,
+                password: document.getElementById('testRegPassword').value || document.getElementById('testPassword').value,
+                phone: '+243 123 456 789',
+                province: 'Kinshasa'
+            };
+            testEndpoint('POST', '/test-register.php', data, 'test-register');
+        }
+
+        function testSimpleLogin() {
+            const data = {
+                email: document.getElementById('testLoginEmail').value || document.getElementById('testEmail').value,
+                password: document.getElementById('testLoginPassword').value || document.getElementById('testPassword').value
+            };
+            testEndpoint('POST', '/test-login.php', data, 'test-login');
+        }
+
+        // Fonction spéciale pour la réparation de base de données
+        function repairDatabase() {
+            if (confirm('⚠️ ATTENTION: Cette action va modifier votre base de données en ajoutant les colonnes manquantes. Voulez-vous continuer?')) {
+                testEndpoint('GET', '/repair-database.php', null, 'repair-database');
+            }
+        }
+
+        // Fonction spéciale pour la réparation de la table signalements
+        function repairSignalementsTable() {
+            if (confirm('🔧 RÉPARER TABLE SIGNALEMENTS: Cette action va ajouter la colonne ip_address et autres colonnes manquantes à la table signalements. Continuer?')) {
+                testEndpoint('GET', '/repair-signalements-table.php', null, 'repair-signalements');
+            }
+        }
+
+        function repairDatabase() {
+            if (confirm('Êtes-vous sûr de vouloir réparer la base de données ?\n\nCela va ajouter les colonnes manquantes automatiquement.')) {
+                testEndpoint('GET', '/repair-database.php', null, 'repair-database');
+            }
+        }
+
+        function testRegister() {
+            const data = {
+                firstName: document.getElementById('regFirstName').value,
+                lastName: document.getElementById('regLastName').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                phone: document.getElementById('regPhone').value,
+                province: document.getElementById('regProvince').value
+            };
+            testEndpoint('POST', '/auth/register.php', data, 'register');
+        }
+
+        function testLogin() {
+            const data = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+            testEndpoint('POST', '/auth/login.php', data, 'login');
+        }
+
+        function testLogout() {
+            testEndpoint('POST', '/auth/logout.php', {}, 'logout');
+        }
+
+        function testCreateSignalement() {
+            // Fonction héritée - redirige vers la nouvelle version JSON
+            testCreateSignalementJSON();
+        }
+
+        // Nouvelle fonction pour créer un signalement avec photo (multipart/form-data)
+        async function testCreateSignalementWithPhoto() {
+            const baseUrl = document.getElementById('baseUrl').value.replace(/\/$/, '');
+            const url = baseUrl + '/signalements/create.php';
+            const startTime = Date.now();
+            
+            // Afficher le loading
+            showLoading('create-signalement');
+            
+            try {
+                // Créer FormData pour multipart/form-data
+                const formData = new FormData();
+                
+                // Ajouter tous les champs
+                formData.append('type_signalement_id', document.getElementById('sigTypeId').value);
+                formData.append('province', document.getElementById('sigProvince').value);
+                formData.append('ville', document.getElementById('sigVille').value);
+                
+                const commune = document.getElementById('sigCommune').value;
+                if (commune) formData.append('commune', commune);
+                
+                const quartier = document.getElementById('sigQuartier').value;
+                if (quartier) formData.append('quartier', quartier);
+                
+                const nomRue = document.getElementById('sigNomRue').value;
+                if (nomRue) formData.append('nom_rue', nomRue);
+                
+                const latitude = document.getElementById('sigLatitude').value;
+                if (latitude) formData.append('latitude', latitude);
+                
+                const longitude = document.getElementById('sigLongitude').value;
+                if (longitude) formData.append('longitude', longitude);
+                
+                formData.append('description', document.getElementById('sigDescription').value);
+                formData.append('urgence', document.getElementById('sigUrgence').value);
+                
+                const circulation = document.getElementById('sigCirculation').value;
+                if (circulation) formData.append('circulation', circulation);
+                
+                const nomCitoyen = document.getElementById('sigNomCitoyen').value;
+                if (nomCitoyen) formData.append('nom_citoyen', nomCitoyen);
+                
+                const telephone = document.getElementById('sigTelephone').value;
+                if (telephone) formData.append('telephone', telephone);
+                
+                // Ajouter la photo si sélectionnée
+                const photoFile = document.getElementById('sigPhoto').files[0];
+                if (photoFile) {
+                    formData.append('photo', photoFile);
+                }
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData, // Pas de Content-Type, le navigateur l'ajoute automatiquement pour multipart
+                    credentials: 'include'
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const responseData = await response.json();
+                
+                // Stocker le code du signalement pour les tests futurs
+                if (responseData.success && responseData.data && responseData.data.code) {
+                    lastSignalementCode = responseData.data.code;
+                    document.getElementById('sigCode').value = lastSignalementCode;
+                }
+                
+                showResponse('create-signalement', response.status, responseData, responseTime);
+                
+                // Affichage spécial si photo incluse
+                if (photoFile && responseData.success && responseData.data && responseData.data.photo) {
+                    console.log('📷 Photo uploadée:', responseData.data.photo);
+                    
+                    // Ajouter un aperçu de la photo dans la réponse
+                    const content = document.getElementById('create-signalement-content');
+                    if (content) {
+                        const photoInfo = document.createElement('div');
+                        photoInfo.style.marginTop = '15px';
+                        photoInfo.style.padding = '15px';
+                        photoInfo.style.background = '#f8f9fa';
+                        photoInfo.style.borderRadius = '8px';
+                        photoInfo.innerHTML = `
+                            <h4 style="margin-bottom: 10px; color: #28a745;">📷 Photo uploadée avec succès</h4>
+                            <p><strong>Nom du fichier:</strong> ${responseData.data.photo.filename}</p>
+                            <p><strong>URL API:</strong> <a href="${baseUrl}${responseData.data.photo.url}" target="_blank">${responseData.data.photo.url}</a></p>
+                            <p><strong>URL directe:</strong> <a href="${baseUrl}${responseData.data.photo.direct_url}" target="_blank">${responseData.data.photo.direct_url}</a></p>
+                        `;
+                        content.parentNode.appendChild(photoInfo);
+                    }
+                }
+                
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                showResponse('create-signalement', 0, { error: error.message }, responseTime);
+            }
+        }
+
+        // Fonction pour créer un signalement sans photo (JSON classique)
+        function testCreateSignalementJSON() {
+            const data = {
+                type_signalement_id: parseInt(document.getElementById('sigTypeId').value),
+                province: document.getElementById('sigProvince').value,
+                ville: document.getElementById('sigVille').value,
+                description: document.getElementById('sigDescription').value,
+                urgence: document.getElementById('sigUrgence').value
+            };
+            
+            // Ajouter les champs optionnels s'ils sont remplis
+            const commune = document.getElementById('sigCommune').value;
+            if (commune) data.commune = commune;
+            
+            const quartier = document.getElementById('sigQuartier').value;
+            if (quartier) data.quartier = quartier;
+            
+            const nomRue = document.getElementById('sigNomRue').value;
+            if (nomRue) data.nom_rue = nomRue;
+            
+            const latitude = document.getElementById('sigLatitude').value;
+            if (latitude) data.latitude = parseFloat(latitude);
+            
+            const longitude = document.getElementById('sigLongitude').value;
+            if (longitude) data.longitude = parseFloat(longitude);
+            
+            const circulation = document.getElementById('sigCirculation').value;
+            if (circulation) data.circulation = circulation;
+            
+            const nomCitoyen = document.getElementById('sigNomCitoyen').value;
+            if (nomCitoyen) data.nom_citoyen = nomCitoyen;
+            
+            const telephone = document.getElementById('sigTelephone').value;
+            if (telephone) data.telephone = telephone;
+            
+            testEndpoint('POST', '/signalements/create.php', data, 'create-signalement');
+        }
+
+        function testListSignalements() {
+            let endpoint = '/signalements/list.php?';
+            const params = new URLSearchParams();
+            
+            const province = document.getElementById('listProvince').value;
+            const urgence = document.getElementById('listUrgence').value;
+            const limit = document.getElementById('listLimit').value;
+            
+            if (province) params.append('province', province);
+            if (urgence) params.append('urgence', urgence);
+            if (limit) params.append('limit', limit);
+            
+            endpoint += params.toString();
+            testEndpoint('GET', endpoint, null, 'list-signalements');
+        }
+
+        function testSignalementDetail() {
+            const code = document.getElementById('sigCode').value;
+            if (!code) {
+                alert('Veuillez entrer un code de signalement');
+                return;
+            }
+            testEndpoint('GET', `/signalements/detail.php?code=${code}`, null, 'signalement-detail');
+        }
+
+        // Tests d'erreurs
+        function testDuplicateEmail() {
+            const data = {
+                firstName: 'Test',
+                lastName: 'Duplicate',
+                email: document.getElementById('testEmail').value, // Email existant
+                password: 'password123'
+            };
+            testEndpoint('POST', '/auth/register.php', data, 'duplicate-email');
+        }
+
+        function testBadPassword() {
+            const data = {
+                email: document.getElementById('testEmail').value,
+                password: 'mauvaisMotDePasse123'
+            };
+            testEndpoint('POST', '/auth/login.php', data, 'bad-password');
+        }
+
+        function testMissingData() {
+            const data = {
+                // Données manquantes intentionnellement
+                province: 'Kinshasa'
+            };
+            testEndpoint('POST', '/signalements/create.php', data, 'missing-data');
+        }
+
+        function testWrongMethod() {
+            testEndpoint('GET', '/auth/register.php', null, 'wrong-method');
+        }
+
+        // Nouvelles fonctions pour les endpoints CRUD
+        function testUpdateSignalement() {
+            const data = {
+                id: parseInt(document.getElementById('updateSigId').value)
+            };
+            
+            const description = document.getElementById('updateSigDescription').value;
+            const urgence = document.getElementById('updateSigUrgence').value;
+            
+            if (description) data.description = description;
+            if (urgence) data.urgence = urgence;
+            
+            if (!data.id) {
+                alert('Veuillez entrer un ID de signalement');
+                return;
+            }
+            
+            testEndpoint('PUT', '/signalements/update.php', data, 'update-signalement');
+        }
+
+        function testDeleteSignalement() {
+            const id = parseInt(document.getElementById('deleteSigId').value);
+            
+            if (!id) {
+                alert('Veuillez entrer un ID de signalement');
+                return;
+            }
+            
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce signalement ?')) {
+                testEndpoint('DELETE', '/signalements/delete.php', { id: id }, 'delete-signalement');
+            }
+        }
+
+        function testDeleteType() {
+            const id = parseInt(document.getElementById('deleteTypeId').value);
+            const force = document.getElementById('forceDeleteType').checked;
+            
+            if (!id) {
+                alert('Veuillez entrer un ID de type');
+                return;
+            }
+            
+            const data = { id: id };
+            if (force) data.force = true;
+            
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce type de signalement ?')) {
+                testEndpoint('DELETE', '/types/delete.php', data, 'delete-type');
+            }
+        }
+
+        function testUpdateProfile() {
+            const data = {};
+            
+            const firstName = document.getElementById('updateFirstName').value;
+            const lastName = document.getElementById('updateLastName').value;
+            const email = document.getElementById('updateEmail').value;
+            const phone = document.getElementById('updatePhone').value;
+            const province = document.getElementById('updateProvince').value;
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            
+            if (firstName) data.firstName = firstName;
+            if (lastName) data.lastName = lastName;
+            if (email) data.email = email;
+            if (phone) data.phone = phone;
+            if (province) data.province = province;
+            
+            // Changement de mot de passe
+            if (currentPassword && newPassword) {
+                data.currentPassword = currentPassword;
+                data.newPassword = newPassword;
+            }
+            
+            if (Object.keys(data).length === 0) {
+                alert('Veuillez remplir au moins un champ à modifier');
+                return;
+            }
+            
+            testEndpoint('PUT', '/auth/update.php', data, 'update-profile');
+        }
+
+        function testDeleteAccount() {
+            const password = document.getElementById('deletePassword').value;
+            const keepSignalements = document.getElementById('keepSignalements').checked;
+            
+            if (!password) {
+                alert('Veuillez entrer votre mot de passe pour confirmer');
+                return;
+            }
+            
+            const confirmMessage = 'ATTENTION: Cette action est irréversible!\n\n' +
+                                  'Votre compte sera définitivement supprimé.\n' +
+                                  (keepSignalements ? 'Vos signalements seront conservés mais anonymisés.' : 'Vos signalements seront également supprimés.') +
+                                  '\n\nÊtes-vous absolument certain de vouloir continuer ?';
+            
+            if (confirm(confirmMessage)) {
+                const data = {
+                    password: password,
+                    keepSignalements: keepSignalements
+                };
+                testEndpoint('DELETE', '/auth/delete.php', data, 'delete-account');
+            }
+        }
+
+        // Fonctions utilitaires
+        function showLoading(responseId) {
+            const responseSection = document.getElementById(responseId + '-response');
+            responseSection.classList.add('show');
+            
+            const statusElement = document.getElementById(responseId + '-status');
+            const timeElement = document.getElementById(responseId + '-time');
+            const contentElement = document.getElementById(responseId + '-content');
+            
+            statusElement.className = 'status-badge status-warning';
+            statusElement.innerHTML = '<div class="loading"></div> En cours...';
+            timeElement.textContent = '';
+            contentElement.textContent = 'Requête en cours...';
+        }
+
+        function showResponse(responseId, status, data, responseTime) {
+            const responseSection = document.getElementById(responseId + '-response');
+            responseSection.classList.add('show');
+            
+            const statusElement = document.getElementById(responseId + '-status');
+            const timeElement = document.getElementById(responseId + '-time');
+            const contentElement = document.getElementById(responseId + '-content');
+            
+            // Statut
+            if (status >= 200 && status < 300) {
+                statusElement.className = 'status-badge status-success';
+                statusElement.textContent = `✅ ${status} OK`;
+            } else if (status >= 400 && status < 500) {
+                statusElement.className = 'status-badge status-warning';
+                statusElement.textContent = `⚠️ ${status} Client Error`;
+            } else if (status >= 500) {
+                statusElement.className = 'status-badge status-error';
+                statusElement.textContent = `❌ ${status} Server Error`;
+            } else {
+                statusElement.className = 'status-badge status-error';
+                statusElement.textContent = `❌ Erreur réseau`;
+            }
+            
+            // Temps de réponse
+            timeElement.textContent = `⏱️ ${responseTime}ms`;
+            
+            // Contenu
+            contentElement.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function clearResponse(responseId) {
+            const responseSection = document.getElementById(responseId + '-response');
+            responseSection.classList.remove('show');
+        }
+
+        function updateAuthStatus(isLoggedIn, userName = '') {
+            const authStatus = document.getElementById('authStatus');
+            if (isLoggedIn) {
+                authStatus.className = 'auth-status logged-in';
+                authStatus.textContent = `✅ Connecté en tant que ${userName}`;
+            } else {
+                authStatus.className = 'auth-status logged-out';
+                authStatus.textContent = '❌ Non connecté - Utilisez l\'onglet Authentification pour vous connecter';
+            }
+        }
+    </script>
+</body>
+</html>

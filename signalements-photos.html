@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NZELA - Signalements avec Photos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .refresh-btn, .filter-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:hover, .filter-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .stats {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .signalements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .signalement-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
+            overflow: hidden;
+        }
+
+        .signalement-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .signalement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .signalement-code {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9em;
+        }
+
+        .signalement-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .status-en-attente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-en-cours {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-resolu {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .images-section {
+            margin-bottom: 20px;
+        }
+
+        .image-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .signalement-photo {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
+            transition: transform 0.3s ease;
+        }
+
+        .signalement-card:hover .signalement-photo {
+            transform: scale(1.05);
+        }
+
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: white;
+            padding: 15px;
+            font-size: 0.9em;
+        }
+
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-bottom: 15px;
+        }
+
+        .type-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .signalement-info {
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 100px;
+        }
+
+        .info-value {
+            color: #666;
+            flex: 1;
+        }
+
+        .signalement-description {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-style: italic;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .signalement-meta {
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            font-size: 0.8em;
+            color: #999;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .urgence-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 500;
+        }
+
+        .urgence-faible {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .urgence-moyenne {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .urgence-haute {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .no-image {
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 0.9em;
+            border: 2px dashed #ddd;
+        }
+
+        @media (max-width: 768px) {
+            .signalements-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .controls {
+                justify-content: center;
+            }
+
+            .signalement-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 NZELA</h1>
+            <p>Signalements avec photos</p>
+        </div>
+
+        <div class="controls">
+            <button class="refresh-btn" onclick="loadSignalements()">
+                🔄 Actualiser
+            </button>
+            <button class="filter-btn" onclick="toggleFilter('all')" data-filter="all">
+                📋 Tous
+            </button>
+            <button class="filter-btn" onclick="toggleFilter('with-photo')" data-filter="with-photo">
+                📸 Avec photo
+            </button>
+            <button class="filter-btn" onclick="toggleFilter('no-photo')" data-filter="no-photo">
+                🚫 Sans photo
+            </button>
+        </div>
+
+        <div id="stats" class="stats" style="display: none;">
+            <span id="stats-text"></span>
+        </div>
+
+        <div id="loading" class="loading">
+            ⏳ Chargement des signalements...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="signalements-container" class="signalements-grid"></div>
+    </div>
+
+    <script>
+        // Configuration API
+        const API_BASE_URL = 'http://localhost/api';
+        
+        // Variables globales
+        let signalementsData = [];
+        let currentFilter = 'all';
+
+        // Fonction principale pour charger les signalements
+        async function loadSignalements() {
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const containerEl = document.getElementById('signalements-container');
+            const statsEl = document.getElementById('stats');
+            
+            // Reset de l'interface
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            statsEl.style.display = 'none';
+            containerEl.innerHTML = '';
+
+            try {
+                console.log('🔄 Chargement des signalements depuis:', `${API_BASE_URL}/signalements/list.php`);
+                
+                const response = await fetch(`${API_BASE_URL}/signalements/list.php`);
+                
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📦 Données reçues:', data);
+                
+                if (data.success && data.data) {
+                    signalementsData = data.data;
+                    
+                    // Calculer les statistiques
+                    const withPhoto = signalementsData.filter(s => s.photo_url).length;
+                    const withoutPhoto = signalementsData.length - withPhoto;
+                    
+                    document.getElementById('stats-text').textContent = 
+                        `📊 ${data.count} signalements | 📸 ${withPhoto} avec photo | 🚫 ${withoutPhoto} sans photo`;
+                    statsEl.style.display = 'block';
+                    
+                    // Afficher les signalements
+                    displaySignalements(signalementsData);
+                    
+                } else {
+                    throw new Error(data.error || 'Données invalides reçues de l\'API');
+                }
+                
+            } catch (error) {
+                console.error('❌ Erreur lors du chargement:', error);
+                showError(`Impossible de charger les signalements: ${error.message}`);
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // Fonction pour afficher les signalements
+        function displaySignalements(signalements) {
+            const container = document.getElementById('signalements-container');
+            
+            // Filtrer selon le filtre actuel
+            let filteredSignalements = signalements;
+            if (currentFilter === 'with-photo') {
+                filteredSignalements = signalements.filter(s => s.photo_url);
+            } else if (currentFilter === 'no-photo') {
+                filteredSignalements = signalements.filter(s => !s.photo_url);
+            }
+            
+            if (!filteredSignalements || filteredSignalements.length === 0) {
+                container.innerHTML = '<div class="error">Aucun signalement trouvé pour ce filtre</div>';
+                return;
+            }
+
+            container.innerHTML = filteredSignalements.map(signalement => createSignalementCard(signalement)).join('');
+            
+            // Initialiser le lazy loading pour les images
+            initializeLazyLoading();
+        }
+
+        // Fonction pour créer une carte de signalement
+        function createSignalementCard(signalement) {
+            const statusClass = `status-${signalement.statut.toLowerCase().replace(' ', '-').replace('é', 'e')}`;
+            const urgenceClass = `urgence-${signalement.urgence.toLowerCase()}`;
+            
+            return `
+                <div class="signalement-card" data-id="${signalement.id}">
+                    <div class="signalement-header">
+                        <div class="signalement-code">${escapeHtml(signalement.code)}</div>
+                        <div class="signalement-status ${statusClass}">${escapeHtml(signalement.statut)}</div>
+                    </div>
+
+                    <div class="type-badge">
+                        <img 
+                            src="${signalement.type_image_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIHN0cm9rZT0iIzk5OSIgc3Ryb2tlLXdpZHRoPSIyIi8+CjwvcG9seWdvbj4KPC9zdmc+'}" 
+                            alt="${escapeHtml(signalement.type_nom)}"
+                            class="type-icon"
+                            onerror="this.style.display='none'"
+                        >
+                        <span>${escapeHtml(signalement.type_nom)}</span>
+                    </div>
+
+                    <div class="images-section">
+                        <div class="image-container">
+                            ${signalement.photo_url ? `
+                                <img 
+                                    class="signalement-photo"
+                                    data-src="${signalement.photo_url}" 
+                                    alt="Photo du signalement"
+                                    onload="handleImageLoad(this)"
+                                    onerror="handleImageError(this)"
+                                >
+                                <div class="image-overlay">
+                                    📍 ${escapeHtml(signalement.nom_rue)}, ${escapeHtml(signalement.quartier)}
+                                </div>
+                            ` : `
+                                <div class="signalement-photo no-image">
+                                    📷 Aucune photo disponible
+                                </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <div class="signalement-description">
+                        "${escapeHtml(signalement.description)}"
+                    </div>
+
+                    <div class="signalement-info">
+                        <div class="info-item">
+                            <span class="info-label">📍 Localisation:</span>
+                            <span class="info-value">${escapeHtml(signalement.nom_rue)}, ${escapeHtml(signalement.quartier)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">👤 Citoyen:</span>
+                            <span class="info-value">${escapeHtml(signalement.nom_citoyen)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">📞 Téléphone:</span>
+                            <span class="info-value">${escapeHtml(signalement.telephone)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">⚡ Urgence:</span>
+                            <span class="info-value">
+                                <span class="urgence-badge ${urgenceClass}">${escapeHtml(signalement.urgence)}</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="signalement-meta">
+                        <span>📅 ${formatDate(signalement.created_at)}</span>
+                        <span>
+                            ${signalement.photo_url ? 
+                                `<a href="${signalement.photo_url}" target="_blank">🔗 Voir photo</a>` : 
+                                '🚫 Pas de photo'
+                            }
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fonction pour gérer les filtres
+        function toggleFilter(filter) {
+            currentFilter = filter;
+            
+            // Mettre à jour les boutons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+            
+            // Réafficher les signalements
+            displaySignalements(signalementsData);
+        }
+
+        // Gestion du chargement des images
+        function handleImageLoad(img) {
+            console.log('✅ Image chargée:', img.alt);
+        }
+
+        function handleImageError(img) {
+            img.parentElement.innerHTML = '<div class="signalement-photo no-image">❌ Erreur de chargement</div>';
+            console.error('❌ Erreur chargement image:', img.src);
+        }
+
+        // Lazy loading avec Intersection Observer
+        function initializeLazyLoading() {
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                            imageObserver.unobserve(img);
+                        }
+                    }
+                });
+            }, {
+                rootMargin: '50px'
+            });
+
+            // Observer toutes les images
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+
+        // Fonction pour afficher les erreurs
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        // Fonction pour échapper le HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Fonction pour formater les dates
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Application NZELA Signalements démarrée');
+            
+            // Activer le filtre "Tous" par défaut
+            document.querySelector('[data-filter="all"]').classList.add('active');
+            
+            loadSignalements();
+        });
+
+        // Gestion des erreurs globales
+        window.addEventListener('error', function(e) {
+            console.error('Erreur JavaScript:', e.error);
+        });
+    </script>
+</body>
+</html>

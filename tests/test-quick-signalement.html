@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test rapide signalement</title>
+</head>
+<body>
+    <h1>Test rapide - Création signalement</h1>
+    
+    <script>
+        // Test avec les données correctes
+        const testData = {
+            type_signalement_id: 1,  // ✅ Corrigé !
+            province: "Kinshasa",
+            ville: "Kinshasa", 
+            description: "Test de création depuis le script de vérification"
+        };
+        
+        console.log("Données à envoyer:", testData);
+        
+        fetch('/api/signalements/create.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(testData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Réponse:", data);
+            document.body.innerHTML += `
+                <h2>Résultat du test:</h2>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        })
+        .catch(error => {
+            console.error("Erreur:", error);
+            document.body.innerHTML += `
+                <h2>Erreur:</h2>
+                <pre>${error.message}</pre>
+            `;
+        });
+    </script>
+</body>
+</html>

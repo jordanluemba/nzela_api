@@ -1,0 +1,22 @@
+# Protection du dossier uploads
+# Empêcher l'exécution de scripts PHP dans le dossier des uploads
+
+# Interdire l'exécution de PHP
+<Files "*.php">
+    Require all denied
+</Files>
+
+# Autoriser l'accès direct aux images
+<FilesMatch "\.(jpg|jpeg|png|webp|gif|svg)$">
+    Require all granted
+</FilesMatch>
+
+# Interdire l'indexation du dossier
+Options -Indexes
+
+# Headers de sécurité pour les images
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set Cache-Control "public, max-age=86400"
+</IfModule>
