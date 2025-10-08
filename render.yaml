@@ -1,14 +1,9 @@
 services:
-  # Service Web (API PHP)
+  # Service Web (API PHP) avec Docker
   - type: web
     name: nzela-api
-    env: php
-    buildCommand: |
-      # Installation des dépendances si nécessaire
-      echo "Building NZELA API..."
-    startCommand: |
-      # Démarrer le serveur PHP
-      php -S 0.0.0.0:$PORT -t .
+    env: docker
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -28,9 +23,23 @@ services:
           property: password
       - key: ENVIRONMENT
         value: production
+      - key: DEBUG
+        value: false
+      - key: API_URL
+        value: https://nzela-api.onrender.com
+      - key: UPLOAD_MAX_FILESIZE
+        value: 5M
+      - key: POST_MAX_SIZE
+        value: 5M
+      - key: MAX_FILE_UPLOADS
+        value: 10
+      - key: MEMORY_LIMIT
+        value: 256M
 
-  # Base de données MySQL
+  # Base de données MySQL managée par Render
   - type: pserv
     name: nzela-db
-    env: docker
-    dockerfilePath: ./docker/mysql/Dockerfile
+    env: postgresql
+    plan: free
+    databases:
+      - name: nzela_db
