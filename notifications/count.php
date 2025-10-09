@@ -22,15 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
-    // Récupérer l'utilisateur connecté
+    // Vérifier l'authentification avec le nouveau système unifié
+    requireAuth(); // Accepte tous les utilisateurs connectés
+    
     $currentUser = getCurrentUser();
-    if (!$currentUser) {
-        // Essayer avec l'authentification admin
-        $currentUser = getCurrentAdmin();
-        if (!$currentUser) {
-            jsonResponse(['error' => 'Authentification requise'], 401);
-        }
-    }
     
     // Déterminer le type d'utilisateur
     $recipientType = ($currentUser['role'] === 'citoyen') ? 'citoyen' : 'admin';

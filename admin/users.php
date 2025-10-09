@@ -18,30 +18,28 @@ require_once __DIR__ . '/../helpers/functions.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Database.php';
 
-// Vérifier l'authentification admin
-$currentAdmin = getCurrentAdmin();
-if (!$currentAdmin) {
-    jsonResponse(['error' => 'Authentification administrateur requise'], 401);
-}
+// Vérifier l'authentification admin avec le nouveau système unifié
+requireAuth('admin');
+$currentUser = getCurrentUser();
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
     switch ($method) {
         case 'GET':
-            handleGetUsers($currentAdmin);
+            handleGetUsers($currentUser);
             break;
             
         case 'POST':
-            handleCreateUser($currentAdmin);
+            handleCreateUser($currentUser);
             break;
             
         case 'PUT':
-            handleUpdateUser($currentAdmin);
+            handleUpdateUser($currentUser);
             break;
             
         case 'DELETE':
-            handleDeleteUser($currentAdmin);
+            handleDeleteUser($currentUser);
             break;
             
         default:
@@ -61,7 +59,7 @@ try {
 /**
  * Lister les utilisateurs avec filtres
  */
-function handleGetUsers($currentAdmin) {
+function handleGetUsers($currentUser) {
     try {
         $database = new Database();
         $db = $database->connect();
@@ -154,7 +152,7 @@ function handleGetUsers($currentAdmin) {
         }
         
         // Logger l'action
-        logAdminAction($currentAdmin['id'], 'list_users', 'user', null, [
+        logUserActivity('LIST_USERS', 'users', null, [
             'filters' => compact('role', 'status', 'search', 'limit', 'page'),
             'total_returned' => count($users)
         ]);
@@ -184,19 +182,19 @@ function handleGetUsers($currentAdmin) {
 /**
  * Créer un nouvel utilisateur ou administrateur
  */
-function handleCreateUser($currentAdmin) {
+function handleCreateUser($currentUser) {
     try {
         // Vérifier les permissions selon le rôle à créer
         $roleToCreate = $data['role'] ?? 'citoyen';
         
         // Les admins peuvent créer des citoyens
         // Seuls les superadmins peuvent créer des admins/superadmins
-        if (($roleToCreate === 'admin' || $roleToCreate === 'superadmin') && $currentAdmin['role'] !== 'superadmin') {
+        if (($roleToCreate === 'admin' || $roleToCreate === 'superadmin') && $currentUser['role'] !== 'superadmin') {
             jsonResponse(['error' => 'Seuls les super-administrateurs peuvent créer des administrateurs'], 403);
         }
         
         // Les admins et superadmins peuvent créer des citoyens
-        if ($currentAdmin['role'] !== 'admin' && $currentAdmin['role'] !== 'superadmin') {
+        if ($currentUser['role'] !== 'admin' && $currentUser['role'] !== 'superadmin') {
             jsonResponse(['error' => 'Permissions insuffisantes pour créer des utilisateurs'], 403);
         }
         
@@ -268,7 +266,7 @@ function handleCreateUser($currentAdmin) {
             'province' => $data['province'] ?? null,
             'role' => $data['role'],
             'permissions' => $defaultPermissions[$data['role']],
-            'created_by' => $currentAdmin['id'],
+            'created_by' => $currentUser['id'],
             'is_active' => $data['is_active'] ?? true
         ];
         
@@ -280,7 +278,7 @@ function handleCreateUser($currentAdmin) {
         
         if ($userId) {
             // Logger l'action
-            logAdminAction($currentAdmin['id'], 'create_user', 'user', $userId, [
+            logUserActivity('CREATE_USER', 'users', $userId, [
                 'role' => $data['role'],
                 'email' => $data['email']
             ]);
@@ -294,7 +292,7 @@ function handleCreateUser($currentAdmin) {
                     'Bienvenue dans l\'équipe administrative NZELA',
                     "Votre compte administrateur a été créé avec le rôle '{$data['role']}'. Vous pouvez maintenant vous connecter et accéder au panneau d'administration.",
                     [
-                        'sender_id' => $currentAdmin['id'],
+                        'sender_id' => $currentUser['id'],
                         'sender_type' => 'admin',
                         'priority' => 'high',
                         'data' => ['welcome' => true, 'role' => $data['role']]
@@ -324,7 +322,7 @@ function handleCreateUser($currentAdmin) {
 /**
  * Modifier un utilisateur existant
  */
-function handleUpdateUser($currentAdmin) {
+function handleUpdateUser($currentUser) {
     try {
         // Récupérer et valider les données
         $input = file_get_contents('php://input');
@@ -348,17 +346,17 @@ function handleUpdateUser($currentAdmin) {
         }
         
         // Vérifier les permissions selon les rôles
-        if ($existingUser['role'] === 'superadmin' && $currentAdmin['role'] !== 'superadmin') {
+        if ($existingUser['role'] === 'superadmin' && $currentUser['role'] !== 'superadmin') {
             jsonResponse(['error' => 'Seuls les super-administrateurs peuvent modifier d\'autres super-administrateurs'], 403);
         }
         
         // Les admins peuvent modifier les citoyens, mais pas d'autres admins
-        if ($existingUser['role'] === 'admin' && $currentAdmin['role'] !== 'superadmin') {
+        if ($existingUser['role'] === 'admin' && $currentUser['role'] !== 'superadmin') {
             jsonResponse(['error' => 'Seuls les super-administrateurs peuvent modifier d\'autres administrateurs'], 403);
         }
         
         // Vérifier si on essaie de changer le rôle vers admin/superadmin
-        if (isset($data['role']) && ($data['role'] === 'admin' || $data['role'] === 'superadmin') && $currentAdmin['role'] !== 'superadmin') {
+        if (isset($data['role']) && ($data['role'] === 'admin' || $data['role'] === 'superadmin') && $currentUser['role'] !== 'superadmin') {
             jsonResponse(['error' => 'Seuls les super-administrateurs peuvent promouvoir des utilisateurs au rôle d\'administrateur'], 403);
         }
         
@@ -367,11 +365,11 @@ function handleUpdateUser($currentAdmin) {
         $allowedFields = ['first_name', 'last_name', 'phone', 'province', 'is_active', 'permissions'];
         
         // Gérer les permissions par champ selon le rôle
-        if ($currentAdmin['role'] === 'superadmin') {
+        if ($currentUser['role'] === 'superadmin') {
             // Les superadmins peuvent tout modifier
             $allowedFields[] = 'role';
             $allowedFields[] = 'email';
-        } elseif ($currentAdmin['role'] === 'admin') {
+        } elseif ($currentUser['role'] === 'admin') {
             // Les admins peuvent modifier l'email des citoyens
             if ($existingUser['role'] === 'citoyen') {
                 $allowedFields[] = 'email';
@@ -418,7 +416,7 @@ function handleUpdateUser($currentAdmin) {
         
         if ($success) {
             // Logger l'action
-            logAdminAction($currentAdmin['id'], 'update_user', 'user', $userId, [
+            logUserActivity('UPDATE_USER', 'users', $userId, [
                 'updated_fields' => array_keys($updateData),
                 'old_values' => array_intersect_key($existingUser, $updateData)
             ]);
@@ -444,7 +442,7 @@ function handleUpdateUser($currentAdmin) {
 /**
  * Supprimer un utilisateur
  */
-function handleDeleteUser($currentAdmin) {
+function handleDeleteUser($currentUser) {
     try {
         // Récupérer l'ID depuis les paramètres ou le body JSON
         $userId = null;
@@ -464,7 +462,7 @@ function handleDeleteUser($currentAdmin) {
         }
         
         // Vérifier les permissions de suppression
-        if ($currentAdmin['role'] !== 'admin' && $currentAdmin['role'] !== 'superadmin') {
+        if ($currentUser['role'] !== 'admin' && $currentUser['role'] !== 'superadmin') {
             jsonResponse(['error' => 'Permissions insuffisantes pour supprimer des utilisateurs'], 403);
         }
         
@@ -477,17 +475,17 @@ function handleDeleteUser($currentAdmin) {
         }
         
         // Empêcher la suppression de soi-même
-        if ($userId == $currentAdmin['id']) {
+        if ($userId == $currentUser['id']) {
             jsonResponse(['error' => 'Vous ne pouvez pas supprimer votre propre compte'], 400);
         }
         
         // Les admins ne peuvent supprimer que des citoyens
-        if ($currentAdmin['role'] === 'admin' && $userToDelete['role'] !== 'citoyen') {
+        if ($currentUser['role'] === 'admin' && $userToDelete['role'] !== 'citoyen') {
             jsonResponse(['error' => 'Les administrateurs ne peuvent supprimer que des citoyens'], 403);
         }
         
         // Seuls les superadmins peuvent supprimer d'autres admins
-        if ($userToDelete['role'] === 'superadmin' && $currentAdmin['role'] !== 'superadmin') {
+        if ($userToDelete['role'] === 'superadmin' && $currentUser['role'] !== 'superadmin') {
             jsonResponse(['error' => 'Seuls les super-administrateurs peuvent supprimer d\'autres super-administrateurs'], 403);
         }
         
@@ -496,7 +494,7 @@ function handleDeleteUser($currentAdmin) {
         
         if ($success) {
             // Logger l'action
-            logAdminAction($currentAdmin['id'], 'delete_user', 'user', $userId, [
+            logUserActivity('DELETE_USER', 'users', $userId, [
                 'deleted_user' => [
                     'email' => $userToDelete['email'],
                     'role' => $userToDelete['role'],
