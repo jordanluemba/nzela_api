@@ -72,31 +72,49 @@ try {
         jsonResponse(['error' => 'Format d\'email invalide'], 400);
     }
     
-    // Tentative de connexion
+    // Tentative de connexion pour tous les types d'utilisateurs
     $userModel = new User();
     $user = $userModel->login($email, $password);
     
     if ($user) {
-        // Créer la session
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_email'] = $user['email'];
-        $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
+        // Créer la session unifiée avec le nouveau système
+        createUserSession($user);
         
         // Mettre à jour la dernière connexion
         $userModel->updateLastLogin($user['id']);
         
+        // Logger la connexion
+        logUserActivity('LOGIN', 'users', $user['id'], [
+            'ip' => getClientIP(),
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+        ]);
+        
+        // Préparer la réponse selon le rôle
+        $responseData = [
+            'id' => $user['id'],
+            'email' => $user['email'],
+            'firstName' => $user['first_name'],
+            'lastName' => $user['last_name'],
+            'role' => $user['role'] ?? 'citoyen',
+            'phone' => $user['phone'],
+            'province' => $user['province']
+        ];
+        
+        // Ajouter des données spécifiques selon le rôle
+        if (in_array($user['role'] ?? 'citoyen', ['admin', 'superadmin'])) {
+            // Pour les admins : permissions et infos supplémentaires
+            $responseData['permissions'] = $user['permissions'] ? json_decode($user['permissions'], true) : [];
+            $responseData['lastActivity'] = $user['last_activity'];
+            $responseData['sessionExpires'] = date('Y-m-d H:i:s', $_SESSION['expires_at']);
+        } else {
+            // Pour les citoyens : nombre de signalements
+            $responseData['signalementsCount'] = $userModel->getSignalementsCount($user['id']);
+        }
+        
         jsonResponse([
             'success' => true,
             'message' => 'Connexion réussie',
-            'user' => [
-                'id' => $user['id'],
-                'email' => $user['email'],
-                'firstName' => $user['first_name'],
-                'lastName' => $user['last_name'],
-                'phone' => $user['phone'],
-                'province' => $user['province'],
-                'signalementsCount' => $userModel->getSignalementsCount($user['id'])
-            ]
+            'user' => $responseData
         ]);
     } else {
         jsonResponse(['error' => 'Email ou mot de passe incorrect'], 401);

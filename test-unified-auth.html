@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth Unifié - NZELA</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 8px 15px; margin: 5px; cursor: pointer; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .form-group { margin: 10px 0; }
+        input[type="email"], input[type="password"] { width: 200px; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Test du Système d'Authentification Unifié</h1>
+    
+    <div class="test-section info">
+        <h3>📋 Tests disponibles</h3>
+        <p>Ce test permet de vérifier que le nouveau système d'authentification unifié fonctionne pour :</p>
+        <ul>
+            <li><strong>Citoyens</strong> - Login classique avec sessions</li>
+            <li><strong>Admins</strong> - Login avec rôles et permissions</li>
+            <li><strong>Super Admins</strong> - Login avec privilèges maximum</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h3>🧪 Test de Connexion</h3>
+        <div class="form-group">
+            <label>Email :</label>
+            <input type="email" id="email" placeholder="user@example.com">
+        </div>
+        <div class="form-group">
+            <label>Mot de passe :</label>
+            <input type="password" id="password" placeholder="motdepasse">
+        </div>
+        <button onclick="testLogin()">🔑 Tester la connexion</button>
+        <button onclick="clearResults()">🧹 Effacer</button>
+        
+        <div id="login-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>👤 Test des Fonctions d'Authentification</h3>
+        <button onclick="testCurrentUser()">👤 getCurrentUser()</button>
+        <button onclick="testHasRole('admin')">🛡️ hasRole('admin')</button>
+        <button onclick="testHasRole('superadmin')">⚡ hasRole('superadmin')</button>
+        <button onclick="testLogout()">🚪 Déconnexion</button>
+        
+        <div id="auth-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showResult('login-result', 'Veuillez renseigner email et mot de passe', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('login-result', `
+                        <h4>✅ Connexion réussie !</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, 'success');
+                } else {
+                    showResult('login-result', `
+                        <h4>❌ Erreur de connexion</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult('login-result', `
+                    <h4>💥 Erreur réseau</h4>
+                    <pre>${error.message}</pre>
+                `, 'error');
+            }
+        }
+        
+        async function testCurrentUser() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/me.php`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                showResult('auth-result', `
+                    <h4>👤 Utilisateur actuel</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult('auth-result', `
+                    <h4>💥 Erreur getCurrentUser</h4>
+                    <pre>${error.message}</pre>
+                `, 'error');
+            }
+        }
+        
+        async function testHasRole(role) {
+            try {
+                const response = await fetch(`${API_BASE}/auth/me.php`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.user) {
+                    const userRole = data.user.role || 'citoyen';
+                    const roles = { 'citoyen': 1, 'admin': 2, 'superadmin': 3 };
+                    const hasRole = roles[userRole] >= roles[role];
+                    
+                    showResult('auth-result', `
+                        <h4>🛡️ Test hasRole('${role}')</h4>
+                        <p>Rôle utilisateur: <strong>${userRole}</strong></p>
+                        <p>A le rôle '${role}': <strong>${hasRole ? '✅ OUI' : '❌ NON'}</strong></p>
+                    `, hasRole ? 'success' : 'info');
+                } else {
+                    showResult('auth-result', `
+                        <h4>❌ Utilisateur non connecté</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult('auth-result', `
+                    <h4>💥 Erreur hasRole</h4>
+                    <pre>${error.message}</pre>
+                `, 'error');
+            }
+        }
+        
+        async function testLogout() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/logout.php`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                showResult('auth-result', `
+                    <h4>🚪 Déconnexion</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `, data.success ? 'success' : 'error');
+            } catch (error) {
+                showResult('auth-result', `
+                    <h4>💥 Erreur logout</h4>
+                    <pre>${error.message}</pre>
+                `, 'error');
+            }
+        }
+        
+        function showResult(elementId, content, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+            element.className = `test-section ${type}`;
+        }
+        
+        function clearResults() {
+            document.getElementById('login-result').innerHTML = '';
+            document.getElementById('auth-result').innerHTML = '';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+    </script>
+</body>
+</html>

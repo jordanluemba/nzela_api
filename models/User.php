@@ -51,7 +51,8 @@ class User extends DatabaseModel {
      * Récupérer un utilisateur par ID
      */
     public function getById($id) {
-        $sql = "SELECT id, email, first_name, last_name, phone, province, created_at, last_login 
+        $sql = "SELECT id, email, first_name, last_name, phone, province, role, permissions, 
+                       created_at, last_login, last_activity 
                 FROM users WHERE id = :id AND is_active = 1";
         return $this->fetch($sql, ['id' => $id]);
     }

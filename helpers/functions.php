@@ -12,11 +12,24 @@ function isLoggedIn() {
 }
 
 /**
- * Vérifier l'authentification et arrêter si non connecté
+ * Vérifier l'authentification avec niveau de rôle minimum requis
+ * @param string $minRole Rôle minimum requis ('citoyen', 'admin', 'superadmin')
  */
-function requireAuth() {
-    if (!isLoggedIn()) {
+function requireAuth($minRole = 'citoyen') {
+    // Vérifier si l'utilisateur est connecté
+    if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
         jsonResponse(['error' => 'Authentification requise'], 401);
+    }
+    
+    // Vérifier le rôle minimum requis
+    if (!hasRole($minRole)) {
+        jsonResponse(['error' => 'Privilèges insuffisants'], 403);
+    }
+    
+    // Vérifier si la session n'a pas expiré (optionnel)
+    if (isset($_SESSION['expires_at']) && time() > $_SESSION['expires_at']) {
+        session_destroy();
+        jsonResponse(['error' => 'Session expirée'], 401);
     }
 }
 
@@ -129,6 +142,150 @@ function getClientIP() {
  */
 function logError($message) {
     error_log("[NZELA API] " . date('Y-m-d H:i:s') . " - " . $message);
+}
+
+// ========================================
+// SYSTÈME D'AUTHENTIFICATION UNIFIÉ
+// ========================================
+
+/**
+ * Vérifier si l'utilisateur a au moins le rôle spécifié
+ * @param string $requiredRole Rôle requis
+ * @return bool
+ */
+function hasRole($requiredRole) {
+    $roles = ['citoyen' => 1, 'admin' => 2, 'superadmin' => 3];
+    $userRole = $_SESSION['role'] ?? 'citoyen';
+    
+    return isset($roles[$userRole]) && 
+           isset($roles[$requiredRole]) && 
+           $roles[$userRole] >= $roles[$requiredRole];
+}
+
+/**
+ * Vérifier une permission spécifique (pour les permissions granulaires)
+ * @param string $permission Permission à vérifier
+ * @return bool
+ */
+function hasPermission($permission) {
+    // Si pas d'utilisateur connecté
+    if (!isset($_SESSION['user_id'])) {
+        return false;
+    }
+    
+    // Les superadmins ont toutes les permissions
+    if (($_SESSION['role'] ?? '') === 'superadmin') {
+        return true;
+    }
+    
+    // Vérifier dans les permissions stockées en session
+    $permissions = $_SESSION['permissions'] ?? [];
+    if (is_string($permissions)) {
+        $permissions = json_decode($permissions, true) ?? [];
+    }
+    
+    return in_array($permission, $permissions) || 
+           isset($permissions[$permission]) && $permissions[$permission] === true;
+}
+
+/**
+ * Récupérer les informations de l'utilisateur connecté
+ * @return array|null
+ */
+function getCurrentUser() {
+    if (!isset($_SESSION['user_id'])) {
+        return null;
+    }
+    
+    return [
+        'id' => $_SESSION['user_id'],
+        'email' => $_SESSION['user_email'] ?? null,
+        'first_name' => $_SESSION['user_first_name'] ?? null,
+        'last_name' => $_SESSION['user_last_name'] ?? null,
+        'role' => $_SESSION['role'] ?? 'citoyen',
+        'permissions' => $_SESSION['permissions'] ?? []
+    ];
+}
+
+/**
+ * Créer une session utilisateur unifiée
+ * @param array $user Données utilisateur
+ */
+function createUserSession($user) {
+    // Régénérer l'ID de session pour sécurité
+    session_regenerate_id(true);
+    
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['user_email'] = $user['email'];
+    $_SESSION['user_first_name'] = $user['first_name'] ?? null;
+    $_SESSION['user_last_name'] = $user['last_name'] ?? null;
+    $_SESSION['role'] = $user['role'] ?? 'citoyen';
+    $_SESSION['permissions'] = $user['permissions'] ?? [];
+    $_SESSION['login_time'] = time();
+    $_SESSION['expires_at'] = time() + (2 * 60 * 60); // 2 heures
+    $_SESSION['ip_address'] = getClientIP();
+}
+
+/**
+ * Détruire la session utilisateur
+ */
+function destroyUserSession() {
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        $_SESSION = [];
+        session_destroy();
+    }
+}
+
+/**
+ * Logger l'activité d'un utilisateur de manière simplifiée
+ * @param string $action Action effectuée
+ * @param string $table Table concernée (optionnel)
+ * @param int $recordId ID de l'enregistrement (optionnel)
+ * @param array $details Détails supplémentaires (optionnel)
+ */
+function logUserActivity($action, $table = null, $recordId = null, $details = []) {
+    try {
+        $user = getCurrentUser();
+        if (!$user) return false;
+        
+        $database = new Database();
+        $pdo = $database->connect();
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO activity_log (user_id, role, action, table_name, record_id, details, ip_address, created_at) 
+            VALUES (:user_id, :role, :action, :table_name, :record_id, :details, :ip_address, NOW())
+        ");
+        
+        return $stmt->execute([
+            'user_id' => $user['id'],
+            'role' => $user['role'],
+            'action' => $action,
+            'table_name' => $table,
+            'record_id' => $recordId,
+            'details' => json_encode($details),
+            'ip_address' => getClientIP()
+        ]);
+        
+    } catch (Exception $e) {
+        error_log("Erreur log activité: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Vérifier si l'utilisateur connecté est un administrateur
+ * @return bool
+ */
+function isAdmin() {
+    return hasRole('admin');
+}
+
+/**
+ * Vérifier si l'utilisateur connecté est un super administrateur  
+ * @return bool
+ */
+function isSuperAdmin() {
+    return ($_SESSION['role'] ?? '') === 'superadmin';
 }
 
 /**
@@ -300,32 +457,6 @@ function getCurrentUserInfo() {
 }
 
 /**
- * Vérifier une permission spécifique pour l'utilisateur connecté
- */
-function hasPermission($permission) {
-    if (!isLoggedIn()) {
-        return false;
-    }
-    
-    // Super admin a toutes les permissions
-    if (isSuperAdmin()) {
-        return true;
-    }
-    
-    // Vérifier dans les permissions JSON
-    $permissions = $_SESSION['user_permissions'] ?? null;
-    if (is_string($permissions)) {
-        $permissions = json_decode($permissions, true);
-    }
-    
-    if (!is_array($permissions)) {
-        return false;
-    }
-    
-    return in_array($permission, $permissions);
-}
-
-/**
  * Logger une action admin pour l'audit
  */
 function logAdminAction($action, $targetType, $targetId = null, $oldValues = null, $newValues = null) {
@@ -461,40 +592,6 @@ function getCurrentAdmin() {
     } catch (Exception $e) {
         error_log("Erreur vérification admin: " . $e->getMessage());
         return false;
-    }
-}
-
-/**
- * Vérifier si l'utilisateur actuel est un administrateur
- */
-function isAdmin() {
-    $admin = getCurrentAdmin();
-    return $admin && in_array($admin['role'], ['admin', 'superadmin']);
-}
-
-/**
- * Vérifier si l'utilisateur actuel est un super administrateur
- */
-function isSuperAdmin() {
-    $admin = getCurrentAdmin();
-    return $admin && $admin['role'] === 'superadmin';
-}
-
-/**
- * Requérir une authentification administrateur
- */
-function requireAdmin() {
-    if (!isAdmin()) {
-        jsonResponse(['error' => 'Accès refusé. Privilèges administrateur requis.'], 403);
-    }
-}
-
-/**
- * Requérir une authentification super administrateur
- */
-function requireSuperAdmin() {
-    if (!isSuperAdmin()) {
-        jsonResponse(['error' => 'Accès refusé. Privilèges super administrateur requis.'], 403);
     }
 }
 
