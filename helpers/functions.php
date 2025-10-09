@@ -383,55 +383,6 @@ function formatTypeWithImage($type) {
  */
 
 /**
- * Vérifier si l'utilisateur connecté est un administrateur (sessions classiques)
- * DEPRECATED - Utiliser la nouvelle authentification admin avec tokens
- */
-function isAdminClassic() {
-    if (!isLoggedIn()) {
-        return false;
-    }
-    
-    $userRole = $_SESSION['user_role'] ?? 'citoyen';
-    return in_array($userRole, ['admin', 'superadmin']);
-}
-
-/**
- * Vérifier si l'utilisateur connecté est un super administrateur (sessions classiques)
- * DEPRECATED - Utiliser la nouvelle authentification admin avec tokens
- */
-function isSuperAdminClassic() {
-    if (!isLoggedIn()) {
-        return false;
-    }
-    
-    return ($_SESSION['user_role'] ?? 'citoyen') === 'superadmin';
-}
-
-/**
- * Exiger des privilèges d'administrateur (sessions classiques - DEPRECATED)
- */
-function requireAdminClassic() {
-    if (!isAdminClassic()) {
-        jsonResponse([
-            'error' => 'Accès refusé',
-            'message' => 'Privilèges d\'administrateur requis'
-        ], 403);
-    }
-}
-
-/**
- * Exiger des privilèges de super administrateur (sessions classiques - DEPRECATED)
- */
-function requireSuperAdminClassic() {
-    if (!isSuperAdminClassic()) {
-        jsonResponse([
-            'error' => 'Accès refusé', 
-            'message' => 'Privilèges de super administrateur requis'
-        ], 403);
-    }
-}
-
-/**
  * Obtenir le rôle de l'utilisateur connecté
  */
 function getCurrentUserRole() {
@@ -454,41 +405,6 @@ function getCurrentUserInfo() {
         'role' => $_SESSION['user_role'] ?? 'citoyen',
         'permissions' => $_SESSION['user_permissions'] ?? null
     ];
-}
-
-/**
- * Logger une action admin pour l'audit
- */
-function logAdminAction($action, $targetType, $targetId = null, $oldValues = null, $newValues = null) {
-    if (!isLoggedIn()) {
-        return false;
-    }
-    
-    try {
-        $database = new Database();
-        $db = $database->connect();
-        
-        $stmt = $db->prepare("
-            INSERT INTO admin_audit_log (admin_id, action, target_type, target_id, old_values, new_values, ip_address, user_agent, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-        ");
-        
-        $stmt->execute([
-            $_SESSION['user_id'],
-            $action,
-            $targetType,
-            $targetId,
-            $oldValues ? json_encode($oldValues) : null,
-            $newValues ? json_encode($newValues) : null,
-            getClientIP(),
-            $_SERVER['HTTP_USER_AGENT'] ?? null
-        ]);
-        
-        return true;
-    } catch (Exception $e) {
-        logError("Erreur logging action admin: " . $e->getMessage());
-        return false;
-    }
 }
 
 /**
@@ -549,100 +465,6 @@ function getAdminDashboardStats() {
     } catch (Exception $e) {
         logError("Erreur stats dashboard: " . $e->getMessage());
         return null;
-    }
-}
-
-// ===============================================
-// FONCTIONS D'AUTHENTIFICATION ADMINISTRATEUR
-// ===============================================
-
-/**
- * Vérifier et récupérer l'administrateur connecté depuis le token
- */
-function getCurrentAdmin() {
-    static $currentAdmin = null;
-    
-    if ($currentAdmin !== null) {
-        return $currentAdmin;
-    }
-    
-    // Récupérer le token depuis les headers
-    $headers = getallheaders();
-    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
-    
-    if (!$authHeader || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-        return false;
-    }
-    
-    $sessionToken = $matches[1];
-    
-    // Vérifier la session
-    try {
-        require_once __DIR__ . '/../models/User.php';
-        $userModel = new User();
-        $currentAdmin = $userModel->verifyAdminSession($sessionToken);
-        
-        if ($currentAdmin) {
-            // Mettre à jour la dernière activité
-            $userModel->updateLastActivity($currentAdmin['id']);
-        }
-        
-        return $currentAdmin;
-        
-    } catch (Exception $e) {
-        error_log("Erreur vérification admin: " . $e->getMessage());
-        return false;
-    }
-}
-
-/**
- * Vérifier une permission spécifique pour l'admin actuel
- */
-function hasAdminPermission($permission) {
-    $admin = getCurrentAdmin();
-    if (!$admin) return false;
-    
-    // Super admin a toutes les permissions
-    if ($admin['role'] === 'superadmin') return true;
-    
-    // Vérifier dans les permissions JSON
-    if ($admin['permissions']) {
-        $permissions = json_decode($admin['permissions'], true);
-        return in_array($permission, $permissions ?? []);
-    }
-    
-    return false;
-}
-
-/**
- * Logger une action administrateur pour audit (sessions classiques - DEPRECATED)
- */
-function logAdminActionClassic($action, $targetType, $targetId = null, $oldValues = null, $newValues = null) {
-    $admin = getCurrentAdmin();
-    if (!$admin) return;
-    
-    try {
-        $database = new Database();
-        $pdo = $database->connect();
-        
-        $stmt = $pdo->prepare("
-            INSERT INTO admin_audit_log (admin_id, action, target_type, target_id, old_values, new_values, ip_address, user_agent) 
-            VALUES (:admin_id, :action, :target_type, :target_id, :old_values, :new_values, :ip, :user_agent)
-        ");
-        
-        $stmt->execute([
-            'admin_id' => $admin['id'],
-            'action' => $action,
-            'target_type' => $targetType,
-            'target_id' => $targetId,
-            'old_values' => $oldValues ? json_encode($oldValues) : null,
-            'new_values' => $newValues ? json_encode($newValues) : null,
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
-        ]);
-        
-    } catch (Exception $e) {
-        error_log("Erreur log audit admin: " . $e->getMessage());
     }
 }
 

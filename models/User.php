@@ -165,43 +165,11 @@ class User extends DatabaseModel {
     }
 
     /**
-     * Connexion administrateur avec vérification des rôles
-     */
-    public function loginAdmin($email, $password) {
-        $sql = "SELECT * FROM users WHERE email = :email AND is_active = 1 AND role IN ('admin', 'superadmin')";
-        $user = $this->fetch($sql, ['email' => $email]);
-        
-        if ($user && password_verify($password, $user['password_hash'])) {
-            return $user;
-        }
-        
-        return false;
-    }
-
-    /**
      * Mettre à jour la dernière activité
      */
     public function updateLastActivity($userId) {
         $sql = "UPDATE users SET last_activity = NOW() WHERE id = :id";
         return $this->execute($sql, ['id' => $userId]);
-    }
-
-    /**
-     * Vérifier une session admin
-     */
-    public function verifyAdminSession($sessionToken) {
-        $sql = "
-            SELECT u.*, s.expires_at, s.ip_address
-            FROM users u
-            JOIN admin_sessions s ON u.id = s.user_id
-            WHERE s.session_token = :token 
-            AND s.is_active = 1 
-            AND s.expires_at > NOW()
-            AND u.is_active = 1
-            AND u.role IN ('admin', 'superadmin')
-        ";
-        
-        return $this->fetch($sql, ['token' => $sessionToken]);
     }
 
     /**
